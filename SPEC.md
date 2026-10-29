@@ -12,6 +12,7 @@ Origin: a Python/Tkinter drill (`Ideogram drills v0.1`) that read 194 words with
 
 ### Users and context
 - CRV students practising alone, on a computer or phone, with pen and paper.
+- Online at **https://pgarralda-personal.github.io/Ideogram-Practice-app/** (GitHub Pages, public).
 - Embedded in a **WordPress** site; also usable as a standalone HTML file (offline).
 
 ### Design principles
@@ -69,7 +70,14 @@ tools/wordlists/<lang>.json  ──►  tools/make_audio.py  ──►  audio/<v
 - Everything lives inside `<div id="idg-app">`; every CSS rule is prefixed with `#idg-app`; element ids start with `idg-`.
 - The block resets the properties themes commonly override on buttons/inputs (margin, text-transform, letter-spacing, box-shadow, height).
 - No global variables (IIFE). Keyboard shortcuts ignore keys typed in inputs/selects.
-- Alternative if a theme still interferes: host `ideogram-drills.html` as a file and embed with an `<iframe>`.
+- Alternative if a theme still interferes: embed the GitHub Pages copy with an `<iframe src="https://pgarralda-personal.github.io/Ideogram-Practice-app/ideogram-drills.html">` (no MP3 upload needed, since that file embeds the audio).
+
+### Repository and hosting
+- Code: **https://github.com/pgarralda-personal/Ideogram-Practice-app** (public), branch `main`.
+- **GitHub Pages** serves `main` from the repository root. `index.html` is a small redirect to `ideogram-drills.html`, so the site root opens the app. Every push to `main` redeploys in about 1–2 minutes.
+- `.gitignore` leaves out `_to_delete/`, `tools/models/` (voice model), Python caches and release zips (`Ideogram-Drills-*.zip`, `versions/*.zip`). Generated files (`ideogram-drills.html`, `wordpress/*`) **are** committed, because Pages serves them.
+- Commits use the GitHub private address `8528405+pgarralda-personal@users.noreply.github.com` (set in this repo's git config), never a personal email.
+- Past releases: git history and tags (`v0.6` onwards). `versions/` keeps only the releases from before the repo existed (v0.2–v0.4).
 
 ### Audio playback chain
 1. **Recorded** (default): MP3 → `AudioContext.decodeAudioData` → `AudioBufferSourceNode` (through a gain node for volume). Source: embedded base64 (`#idg-audio`) if present, otherwise `fetch(AUDIO_BASE/<voice>/<slug>.mp3)`. Decoded buffers are cached; the next word is prefetched.
@@ -160,7 +168,7 @@ Anything works as long as the result lands in `audio/<voice id>/<slug>.mp3`. For
 
 ## 6. Test checklist
 
-Automated (before every release): build succeeds; open `ideogram-drills.html`, run a 20-word session in each pace mode with short times; review shows 20 words; no console errors.
+Automated (before every release): build succeeds; open `ideogram-drills.html` (served over http, e.g. `python3 -m http.server`), run a 20-word session in each pace mode with short times, including an end time of 0 s; the word counter shows the speed rising to "Fastest word speed"; review shows 20 words; no console errors.
 
 Manual, on real devices:
 - [ ] Mac: Safari and Chrome. Test voice, full session, Space / → / Esc, pause during a word and during the countdown.
@@ -168,18 +176,21 @@ Manual, on real devices:
 - [ ] Android (Chrome): same.
 - [ ] WordPress staging page: block renders with the theme; MP3s load (open `<AUDIO_BASE>/af_heart/mountain.mp3` directly); dark mode looks right.
 - [ ] Each language: picker, categories, both voices, browser fallback (choose "Browser voice").
+- [ ] Word speed-up: listen to a session ending at 0 s; the fastest words sound natural (same pitch, no choppiness) at the chosen maximum.
+- [ ] GitHub Pages: after the push, the site root opens the app and the tab title shows the new version (hard-reload if needed).
 - [ ] Settings survive a reload.
 
 ---
 
 ## 7. Release process
 
-1. Bump the version in `tools/template.html` (two places: `<title>` and the block comment) and in this spec.
+1. Bump the version in `tools/template.html` (two places: `<title>` and the block comment), in this spec (top line, section 2 title, History) and in the README.
 2. `python3 tools/build.py`.
 3. Run the test checklist.
-4. Copy the previous `ideogram-drills.html` and `wordpress/wordpress-block.html` into `versions/` with the old version number.
-5. Zip the project for sharing (exclude `versions/`, `tools/models/`, `_to_delete/`).
-6. WordPress: re-upload the MP3 folders if words or voices changed (`wordpress/ideogram-audio.zip`), and replace the Custom HTML block content.
+4. Commit and push: `git add -A && git commit -m "vX.Y: …" && git push`. Tag the release: `git tag vX.Y && git push origin vX.Y`.
+5. Check GitHub Pages shows the new version (title of `ideogram-drills.html`).
+6. WordPress: replace the Custom HTML block content with `wordpress/wordpress-block.html`; re-upload the MP3 folders only if words or voices changed (`wordpress/ideogram-audio.zip`).
+7. Optional, for sharing offline: zip the project (exclude `versions/`, `tools/models/`, `_to_delete/`) or attach the zip to a GitHub Release.
 
 ---
 
@@ -198,6 +209,9 @@ Manual, on real devices:
 - `localStorage` settings are per browser and device; nothing is synced.
 - The standalone file embeds all audio, so it grows with each language/voice.
 - Kokoro pronunciation is occasionally off for rare words (use `pronounce`).
+- Word speed-up is a simple time-stretch: fine up to ~1.5×; towards 2× some words can sound slightly rough.
+- The GitHub Pages site is public: anyone with the link can use the app.
+- `ideogram-drills.html` (~2.3 MB) is committed on every release, so the repository grows by roughly that much per release that changes the app.
 
 ## 10. History
 - **v0.1**: Python/Tkinter + macOS `say`, gaps 5/4/3/2 s per 20 words.
@@ -206,5 +220,5 @@ Manual, on real devices:
 - **v0.3**: pre-recorded Kokoro voices (Heart, Michael), Web Audio playback, WordPress build loading MP3s.
 - **v0.4**: configurable pace (smooth / steps / fixed) with preview.
 - **v0.5**: word lists as per-language JSON; `make_audio.py` and `build.py` pipeline; language picker; accent-safe file names; this spec.
-- **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Published on GitHub Pages.
-- **v0.6**: words speed up (pitch kept) as the time per word shrinks.
+- **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Project moved to GitHub; published on GitHub Pages.
+- **v0.6**: words speed up (pitch kept) as the time per word shrinks: "Speed up words as time shortens" and "Fastest word speed" settings.

@@ -18,7 +18,7 @@ Full specification, data formats and how-tos: **[SPEC.md](SPEC.md)**.
 | `tools/make_audio.py` | Generates missing audio with the free Kokoro voices. |
 | `tools/build.py` | Builds the app, the WordPress block and the audio zip. |
 | `tools/template.html` | App source: edit the app here, never the built files. |
-| `versions/` | Previous releases. |
+| `versions/` | Releases from before the GitHub repo (v0.2–v0.4); newer ones are in git history and tags. |
 
 ## Common tasks
 ```bash
