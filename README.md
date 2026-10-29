@@ -1,11 +1,14 @@
 # Ideogram Drills
 
 CRV ideogram practice: words are spoken in random order, with a countdown that shortens as the session goes on.
+
+**Try it online:** https://pgarralda-personal.github.io/Ideogram-Practice-app/
 Full specification, data formats and how-tos: **[SPEC.md](SPEC.md)**.
 
 ## What's here
 | Path | What it is |
 |---|---|
+| `index.html` | GitHub Pages entry point; redirects to the app. |
 | `ideogram-drills.html` | The app (v0.5). Self-contained with all audio; double-click to open; works offline; share as one file. |
 | `voice-sample.mp3` | Short sample of the two English voices. |
 | `wordpress/wordpress-block.html` | Paste into a WordPress **Custom HTML** block. |
