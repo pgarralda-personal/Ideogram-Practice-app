@@ -9,7 +9,7 @@ Full specification, data formats and how-tos: **[SPEC.md](SPEC.md)**.
 | Path | What it is |
 |---|---|
 | `index.html` | GitHub Pages entry point; redirects to the app. |
-| `ideogram-drills.html` | The app (v0.5). Self-contained with all audio; double-click to open; works offline; share as one file. |
+| `ideogram-drills.html` | The app (v0.6). Self-contained with all audio; double-click to open; works offline; share as one file. |
 | `voice-sample.mp3` | Short sample of the two English voices. |
 | `wordpress/wordpress-block.html` | Paste into a WordPress **Custom HTML** block. |
 | `wordpress/ideogram-audio.zip` | MP3s for WordPress: unzip and upload the voice folders to `/wp-content/uploads/ideogram-audio/` (file manager / FTP). |

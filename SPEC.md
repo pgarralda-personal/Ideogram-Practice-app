@@ -1,6 +1,6 @@
 # Ideogram Drills: Specification
 
-Version described: **v0.5.1** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
+Version described: **v0.6** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
 
 ---
 
@@ -23,12 +23,13 @@ Origin: a Python/Tkinter drill (`Ideogram drills v0.1`) that read 194 words with
 
 ---
 
-## 2. Features (v0.5)
+## 2. Features (v0.6)
 
 | Area | Behaviour |
 |---|---|
 | Session | Words shuffled each run from the selected categories; length 20 / 50 / 100 / all. |
 | Pace | **Smooth** (linear from start to end time), **Steps** (minus X s every N words, never below a minimum), **Fixed**. Live preview of the schedule. |
+| Word speed-up | "Speed up words as time shortens" (on by default, hidden in Fixed): recorded words play faster as the time per word drops, from 1× up to "Fastest word speed" (1.1–2×, default 1.5×) at the session's shortest time. Pitch is kept (time-stretch, see 3). The current speed shows next to the word counter. Browser voice: its rate is multiplied by the same factor. |
 | Countdown | Ring + seconds; grey while the word is playing, coloured during the response time. Progress bar for the session. |
 | Controls | Start / Pause / Resume, Next, Stop. Keyboard: Space (start/pause), → (next), Esc (stop). |
 | Voice | Recorded voices of the current language: all at random (default), or one voice; or the browser voice. Volume. Optional 880 Hz beep 0.38 s before each word. Test voice button. |
@@ -72,6 +73,7 @@ tools/wordlists/<lang>.json  ──►  tools/make_audio.py  ──►  audio/<v
 
 ### Audio playback chain
 1. **Recorded** (default): MP3 → `AudioContext.decodeAudioData` → `AudioBufferSourceNode` (through a gain node for volume). Source: embedded base64 (`#idg-audio`) if present, otherwise `fetch(AUDIO_BASE/<voice>/<slug>.mp3)`. Decoded buffers are cached; the next word is prefetched.
+   - Speed-up: `stretch(buffer, rate)` time-stretches the decoded word without changing pitch (WSOLA: 30 ms Hann windows at 50 % overlap, input read every `15 ms × rate`, each window shifted up to ±8 ms to the best normalised cross-correlation with the previous one). ~20 ms per word; results are cached per buffer and rate, and the next word is stretched during prefetch.
 2. If the recording is missing or fails → **browser speech** (`speechSynthesis`) with the selected/ranked voice and `lang` of the current language.
 3. Safety timers resolve playback if `onended`/`onend` never fires (recorded: duration + 0.8 s; speech: estimate from word length).
 
@@ -112,7 +114,7 @@ Rules (checked by the tools):
 - Format: MP3, mono, 24 kHz, 40 kbps. Processing: silence trimmed at both ends (−45 dB threshold), loudness normalised to −18 LUFS (true peak −1.5 dB), 50 ms tail. Typical length 0.6–1.1 s, ~4–8 KB.
 
 ### 4.3 Settings (`localStorage["idg-settings"]`)
-`lang, src ("all" | voice id | "browser"), voice (browser voice name), rate, vol, beep, len ("20"|"50"|"100"|"0"=all), mode ("smooth"|"steps"|"fixed"), g0 (start / fixed time), g1 (end time or minimum), dec (step size s), every (words per step), show, catsBy ({lang: [category names]})`.
+`lang, src ("all" | voice id | "browser"), voice (browser voice name), rate, vol, beep, len ("20"|"50"|"100"|"0"=all), mode ("smooth"|"steps"|"fixed"), g0 (start / fixed time), g1 (end time or minimum), dec (step size s), every (words per step), wfast (speed up words, bool), wmax (fastest word speed, 1.1–2), show, catsBy ({lang: [category names]})`.
 Older keys are migrated on load (`src:"both"` → `"all"`, `cats` → `catsBy.en`). When adding settings, add a default in `DEFAULTS`; never rename a key without a migration.
 
 ### 4.4 Pace formulas (word index i from 0, session length n, times in s, result rounded to 0.1 and never below 0)
@@ -121,6 +123,7 @@ Allowed values: start time `g0` 0.5–30 s; end time / minimum `g1` 0–30 s (0 
 - Fixed: `g0`
 - Smooth: `g0 + (g1 − g0) · i / (n − 1)`
 - Steps: `max(min(g0, g1), g0 − floor(i / every) · dec)`
+- Word speed (when `wfast`, not Fixed): with `hi` = time of the first word and `lo` = time of the last, `1 + (wmax − 1) · (hi − gap_i) / (hi − lo)`, rounded to 0.05; 1× when `hi ≤ lo`.
 
 ---
 
@@ -204,3 +207,4 @@ Manual, on real devices:
 - **v0.4**: configurable pace (smooth / steps / fixed) with preview.
 - **v0.5**: word lists as per-language JSON; `make_audio.py` and `build.py` pipeline; language picker; accent-safe file names; this spec.
 - **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Published on GitHub Pages.
+- **v0.6**: words speed up (pitch kept) as the time per word shrinks.

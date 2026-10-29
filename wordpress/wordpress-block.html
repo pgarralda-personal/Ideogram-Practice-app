@@ -1,4 +1,4 @@
-<!-- ═══ Ideogram Drills v0.5.1 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<!-- ═══ Ideogram Drills v0.6 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
 <div id="idg-app">
 <style>
 #idg-app {
@@ -128,6 +128,8 @@
       <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0" max="30" step="0.5"></label>
       <label class="idg-row" id="idg-dec-r"><span>Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
       <label class="idg-row" id="idg-every-r"><span>Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
+      <label class="idg-row" id="idg-wfast-r"><span>Speed up words as time shortens</span><input type="checkbox" id="idg-wfast"></label>
+      <label class="idg-row" id="idg-wmax-r"><span>Fastest word speed</span><span class="idg-inline"><input type="range" id="idg-wmax" min="1.1" max="2" step="0.05"><span class="idg-val" id="idg-wmax-v"></span></span></label>
       <div class="idg-pace" id="idg-pace"></div>
       <label class="idg-row"><span>Show word on screen</span><input type="checkbox" id="idg-show"></label>
       <div class="idg-row" style="display:block"><span>Categories</span>
@@ -168,7 +170,7 @@
   var AUDIO_BASE = "/wp-content/uploads/ideogram-audio";
   var EMB = null; try { var ae = document.getElementById("idg-audio"); if (ae) EMB = JSON.parse(ae.textContent); } catch (e) {}
   if (AUDIO_BASE.indexOf("__") === 0) AUDIO_BASE = "";
-  var DEFAULTS = { lang:"", src:"all", voice:"", rate:0.9, vol:1, beep:true, len:"50", mode:"smooth", g0:5, g1:1.5, dec:1, every:20, show:false, catsBy:{} };
+  var DEFAULTS = { lang:"", src:"all", voice:"", rate:0.9, vol:1, beep:true, len:"50", mode:"smooth", g0:5, g1:1.5, dec:1, every:20, wfast:true, wmax:1.5, show:false, catsBy:{} };
   var S = load();
   function load() {
     var s = {}; try { s = JSON.parse(localStorage.getItem("idg-settings") || "{}") || {}; } catch (e) {}
@@ -243,19 +245,20 @@
 
   // ─── Speech: say(word) → Promise resolving when finished (with fallbacks) ───
   var keep = null; // keep a reference: Safari can drop onend otherwise
-  function say(word) {
+  function say(word, k) {
+    k = k || 1;
     return new Promise(function (resolve) {
       if (!synth) return resolve();
       var done = false, fb;
       var finish = function () { if (done) return; done = true; clearTimeout(fb); resolve(); };
       var u = new SpeechSynthesisUtterance(word);
       var v = currentVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = L.code;
-      u.rate = S.rate; u.volume = S.vol;
+      u.rate = Math.min(2, S.rate * k); u.volume = S.vol;
       u.onend = finish; u.onerror = finish;
       keep = u;
       var go = function () { synth.speak(u); if (synth.paused) synth.resume(); };
       if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(go, 60); } else go(); // Chrome drops speak() right after cancel()
-      fb = setTimeout(finish, 1200 + word.length * 140 / S.rate + 1500); // in case onend never fires
+      fb = setTimeout(finish, 1200 + word.length * 140 / (S.rate * k) + 1500); // in case onend never fires
     });
   }
   // iOS: speech must start inside a tap; a silent utterance unlocks it
@@ -291,9 +294,40 @@
     p.catch(function () { delete cache[key]; });
     return (cache[key] = p);
   }
+  // Pitch-preserving speed-up (WSOLA time-stretch): overlap-add 30 ms windows taken from
+  // the input every hop*rate samples, each nudged (±8 ms) to line up with the previous one.
+  function stretch(buf, rate) {
+    if (!(rate > 1.001)) return buf;
+    var key = rate.toFixed(2);
+    if (buf._st && buf._st[key]) return buf._st[key];
+    var sr = buf.sampleRate, x = buf.getChannelData(0), N = x.length;
+    var W = 2 * Math.round(sr * 0.015), H = W / 2, D = Math.round(sr * 0.008), st = Math.max(1, Math.round(sr / 12000));
+    var outLen = Math.ceil(N / rate), y = new Float32Array(outLen + W), win = new Float32Array(W), i;
+    for (i = 0; i < W; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / W);
+    var prev = 0;
+    for (var k = 0; k * H < outLen; k++) {
+      var o = k * H, nom = Math.min(Math.round(k * H * rate), Math.max(0, N - W)), best = nom;
+      if (k > 0) {
+        var tgt = prev + H, bc = -Infinity;
+        for (var d = -D; d <= D; d++) {
+          var q = nom + d; if (q < 0 || q + W > N) continue;
+          var c = 0, e = 1e-9;
+          for (i = 0; i < W; i += st) { var a = x[q + i]; c += a * (tgt + i < N ? x[tgt + i] : 0); e += a * a; }
+          c /= Math.sqrt(e);
+          if (c > bc) { bc = c; best = q; }
+        }
+      }
+      for (i = 0; i < W; i++) { var s = best + i; if (s < N) y[o + i] += x[s] * (k === 0 && i < H ? 1 : win[i]); }
+      prev = best;
+    }
+    var out = actx.createBuffer(1, outLen, sr);
+    out.getChannelData(0).set(y.subarray(0, outLen));
+    (buf._st = buf._st || {})[key] = out;
+    return out;
+  }
   function useRecorded() { return S.src !== "browser" && hasRecorded() && !!actx; }
   function pickVoice() { return S.src === "all" ? RVOICES[Math.floor(Math.random() * RVOICES.length)] : S.src; }
-  function prefetch(w) { if (!useRecorded() || !w) return; (S.src === "all" ? RVOICES : [S.src]).forEach(function (v) { getBuffer(v, w).catch(function () {}); }); }
+  function prefetch(w, rate) { if (!useRecorded() || !w) return; (S.src === "all" ? RVOICES : [S.src]).forEach(function (v) { getBuffer(v, w).then(function (b) { stretch(b, rate); }).catch(function () {}); }); }
   function playBuffer(buf) {
     return new Promise(function (res) {
       var src = actx.createBufferSource(), g = actx.createGain(), done = false, fb;
@@ -304,9 +338,10 @@
     });
   }
   // speak(word): recorded voice when available, browser voice otherwise
-  function speak(word) {
-    if (!useRecorded()) return say(word);
-    return getBuffer(pickVoice(), word).then(playBuffer, function () { return say(word); });
+  function speak(word, rate) {
+    rate = rate || 1;
+    if (!useRecorded()) return say(word, rate);
+    return getBuffer(pickVoice(), word).then(function (b) { return playBuffer(stretch(b, rate)); }, function () { return say(word, rate); });
   }
   function hush() {
     try { if (playing) playing.stop(); } catch (e) {} playing = null;
@@ -337,8 +372,22 @@
     return Math.max(0, Math.round(g * 10) / 10);
   }
   function gapFor(i) { return gapAt(i, order.length); }
+  // Word speed for word i: 1× at the longest time, rising to wmax at the shortest time of the session
+  function rateAt(i, n) {
+    if (!S.wfast || S.mode === "fixed" || n <= 1) return 1;
+    var hi = gapAt(0, n), lo = gapAt(n - 1, n);
+    if (hi <= lo) return 1;
+    var f = Math.max(0, Math.min(1, (hi - gapAt(i, n)) / (hi - lo)));
+    return Math.round((1 + (+S.wmax - 1) * f) * 20) / 20;
+  }
+  function rateFor(i) { return rateAt(i, order.length); }
+  function fmtRate(r) { return (+r).toFixed(2).replace(/0$/, "").replace(/\.0$/, "") + "×"; }
   function sessionLen() { var n = pool().length; return Math.min(+S.len || n, n); }
   function paceText() {
+    var t = paceSteps(), n = sessionLen(), r = n ? rateAt(n - 1, n) : 1;
+    return t && r > 1 ? t + " · words speed up to " + fmtRate(r) : t;
+  }
+  function paceSteps() {
     var n = sessionLen(), f = function (x) { return (x % 1 ? x.toFixed(1) : String(x)) + " s"; };
     if (!n) return "";
     if (S.mode === "fixed" || n === 1) return "Every word: " + f(gapAt(0, n)) + " · " + n + " words";
@@ -375,18 +424,18 @@
   function step() {
     var id = runId;
     if (idx >= order.length) return finish();
-    var word = order[idx], gap = gapFor(idx);
+    var word = order[idx], gap = gapFor(idx), rate = rateFor(idx);
     reached = Math.max(reached, idx + 1);
     gapLen = 0; gapLeft = 0;
     setNow(S.show ? word : "•"); setSecs("listen");
     setRing(1, true);
-    $("meta").textContent = "Word " + (idx + 1) + " of " + order.length + " · " + gap.toFixed(1) + " s";
+    $("meta").textContent = "Word " + (idx + 1) + " of " + order.length + " · " + gap.toFixed(1) + " s" + (rate > 1 ? " · " + fmtRate(rate) : "");
     $("prog").style.width = ((idx + 1) / order.length * 100) + "%";
-    prefetch(order[idx + 1]);
+    prefetch(order[idx + 1], rateFor(idx + 1));
     if (S.beep) beep();
     setTimeout(function () {
       if (id !== runId || state !== "running") return;
-      speak(word).then(function () {
+      speak(word, rate).then(function () {
         if (id !== runId || state !== "running") return;
         gapLen = gap * 1000; runGap(gapLen, id);
       });
@@ -402,7 +451,7 @@
     unlockAudio(); unlockSpeech();          // must happen inside the tap
     var n = +S.len || p.length;
     order = shuffle(p).slice(0, Math.min(n, p.length));
-    prefetch(order[0]);
+    prefetch(order[0], rateFor(0));
     idx = 0; missed = {}; reached = 0; runId++;
     state = "running"; lockScreen(); ui();
     $("review").hidden = true;
@@ -474,7 +523,7 @@
     $("skip").hidden = state === "idle";
     $("stop").hidden = state === "idle";
     $("cats").querySelectorAll("button").forEach(function (b) { b.disabled = state !== "idle"; });
-    ["lang", "len", "mode", "g0", "g1", "dec", "every"].forEach(function (k) { $(k).disabled = state !== "idle"; });
+    ["lang", "len", "mode", "g0", "g1", "dec", "every", "wfast", "wmax"].forEach(function (k) { $(k).disabled = state !== "idle"; });
   }
 
   // ─── Controls ───
@@ -503,6 +552,9 @@
     $("g1-r").hidden = m === "fixed";
     $("dec-r").hidden = m !== "steps";
     $("every-r").hidden = m !== "steps";
+    $("wfast-r").hidden = m === "fixed";
+    $("wmax-r").hidden = m === "fixed" || !S.wfast;
+    $("wmax-v").textContent = fmtRate(S.wmax);
     $("pace").textContent = paceText();
   }
   function bind() {
@@ -521,6 +573,9 @@
     $("dec").addEventListener("change", num("dec", 0.1, 10)); $("every").addEventListener("change", num("every", 1, 200, true));
     ["g0", "g1", "dec", "every"].forEach(function (k) { $(k).addEventListener("input", function () { var v = parseFloat(this.value); if (isFinite(v) && (v > 0 || (k === "g1" && v === 0))) { var old = S[k]; S[k] = k === "every" ? Math.max(1, Math.round(v)) : v; $("pace").textContent = paceText(); S[k] = old; } }); });
     $("mode").addEventListener("change", function () { S.mode = this.value; save(); showPace(); });
+    $("wfast").checked = S.wfast; $("wmax").value = S.wmax;
+    $("wfast").addEventListener("change", function () { S.wfast = this.checked; save(); showPace(); });
+    $("wmax").addEventListener("input", function () { S.wmax = +this.value; save(); showPace(); });
     $("voice").addEventListener("change", function () { S.voice = this.value; save(); });
     // Language picker (only shown when the build has more than one language)
     var ls = $("lang");
