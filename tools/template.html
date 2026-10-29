@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideogram Drills v0.5</title>
+</head>
+<body style="margin:0">
+<!-- ═══ Ideogram Drills v0.5 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<div id="idg-app">
+<style>
+#idg-app {
+  --bg:#f6f5f2; --card:#fff; --text:#1d1d1f; --muted:#6b6b70; --line:#e2e0db;
+  --accent:#2f5d8a; --accent-text:#fff; --stop:#a33a2e; --ok:#2e7d4f; --soft:#eef2f6;
+  background:var(--bg); color:var(--text); min-height:100vh;
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  #idg-app { --bg:#161618; --card:#222225; --text:#ececee; --muted:#9a9aa0; --line:#36363a;
+    --accent:#6f9fd0; --accent-text:#0d1620; --stop:#e07a6c; --ok:#6cc08f; --soft:#2a2e34; }
+}
+#idg-app *, #idg-app *::before, #idg-app *::after { box-sizing:border-box; }
+#idg-app .idg-main { max-width:560px; margin:0 auto; padding:24px 16px 40px; }
+#idg-app .idg-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
+#idg-app h1 { font-size:22px; margin:0 0 4px; line-height:1.25; color:var(--text); }
+#idg-app .idg-sub { color:var(--muted); margin:0 0 18px; font-size:14px; }
+#idg-app .idg-stage { display:flex; flex-direction:column; align-items:center; gap:6px; margin:6px 0 4px; }
+#idg-app .idg-ring { position:relative; width:150px; height:150px; }
+#idg-app .idg-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+#idg-app .idg-ring circle { fill:none; stroke-width:8; }
+#idg-app .idg-ring .trk { stroke:var(--line); }
+#idg-app .idg-ring .arc { stroke:var(--accent); stroke-linecap:round; }
+#idg-app .idg-ring .arc.speaking { stroke:var(--muted); }
+#idg-app .idg-ringtxt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 14px; }
+#idg-app .idg-now { font-size:22px; font-weight:600; line-height:1.2; word-break:break-word; }
+#idg-app .idg-secs { font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; min-height:20px; }
+#idg-app .idg-meta { text-align:center; color:var(--muted); font-size:14px; min-height:22px; font-variant-numeric:tabular-nums; }
+#idg-app .idg-bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin:14px 0 18px; }
+#idg-app .idg-bar > div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+#idg-app button { font:inherit; border:0; border-radius:10px; cursor:pointer; line-height:1.2; margin:0; text-transform:none; letter-spacing:normal; box-shadow:none; }
+#idg-app .idg-btns { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
+#idg-app .idg-go { padding:14px; font-size:18px; font-weight:600; background:var(--accent); color:var(--accent-text); }
+#idg-app .idg-go.paused { background:var(--ok); color:#fff; }
+#idg-app .idg-sec { padding:14px 16px; font-size:15px; background:var(--soft); color:var(--text); }
+#idg-app .idg-sec[hidden], #idg-app #idg-bvoice[hidden] { display:none; }
+#idg-app .idg-stopbtn { color:var(--stop); }
+#idg-app .idg-keys { text-align:center; font-size:12px; color:var(--muted); margin-top:8px; }
+#idg-app kbd { font:inherit; font-size:11px; border:1px solid var(--line); border-radius:4px; padding:0 5px; }
+#idg-app fieldset { border:1px solid var(--line); border-radius:10px; padding:12px 14px 14px; margin:18px 0 0; }
+#idg-app legend { font-size:12px; font-weight:600; color:var(--muted); padding:0 6px; text-transform:uppercase; letter-spacing:.04em; }
+#idg-app .idg-row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; margin-top:10px; }
+#idg-app .idg-row:first-of-type { margin-top:2px; }
+#idg-app .idg-row > span:first-child { flex:0 0 auto; }
+#idg-app select, #idg-app input[type=number] { font:inherit; font-size:14px; padding:6px 8px; border-radius:8px;
+  border:1px solid var(--line); background:var(--bg); color:var(--text); max-width:62%; margin:0; height:auto; }
+#idg-app input[type=number] { width:72px; }
+#idg-app input[type=range] { width:58%; accent-color:var(--accent); margin:0; }
+#idg-app input[type=checkbox] { accent-color:var(--accent); width:18px; height:18px; margin:0; }
+#idg-app .idg-val { font-variant-numeric:tabular-nums; color:var(--muted); min-width:42px; text-align:right; font-size:13px; }
+#idg-app .idg-inline { display:flex; align-items:center; gap:8px; justify-content:flex-end; flex:1; }
+#idg-app .idg-test { padding:6px 10px; font-size:13px; background:var(--soft); color:var(--text); }
+#idg-app .idg-cats { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+#idg-app .idg-chip { padding:6px 10px; font-size:13px; border-radius:999px; background:var(--soft); color:var(--muted); border:1px solid transparent; }
+#idg-app .idg-chip.on { background:var(--accent); color:var(--accent-text); }
+#idg-app .idg-hint { font-size:12px; color:var(--muted); margin-top:8px; }
+#idg-app .idg-pace { font-size:12px; color:var(--muted); margin-top:8px; padding:8px 10px; background:var(--soft); border-radius:8px; font-variant-numeric:tabular-nums; }
+#idg-app .idg-row[hidden] { display:none; }
+#idg-app .idg-review { margin-top:20px; border-top:1px solid var(--line); padding-top:16px; }
+#idg-app .idg-review[hidden] { display:none; }
+#idg-app .idg-review h2 { font-size:16px; margin:0 0 4px; color:var(--text); }
+#idg-app .idg-score { font-size:14px; color:var(--muted); margin-bottom:10px; }
+#idg-app .idg-list { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
+#idg-app .idg-list button { width:100%; text-align:left; padding:7px 10px; font-size:14px; background:var(--soft); color:var(--text); display:flex; gap:8px; align-items:baseline; }
+#idg-app .idg-list button .n { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:22px; }
+#idg-app .idg-list button.miss { background:transparent; border:1px dashed var(--stop); color:var(--stop); }
+#idg-app .idg-list button.miss .w { text-decoration:line-through; }
+#idg-app .idg-note { color:var(--muted); font-size:13px; margin-top:18px; }
+#idg-app .idg-warn { color:var(--stop); font-size:13px; margin-top:10px; }
+#idg-app .idg-warn:empty { display:none; }
+#idg-app .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+
+<div class="idg-main">
+  <div class="idg-card">
+    <h1>Ideogram Drills</h1>
+    <p class="idg-sub">You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.</p>
+
+    <div class="idg-stage">
+      <div class="idg-ring" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="arc" id="idg-arc" cx="50" cy="50" r="44"/></svg>
+        <div class="idg-ringtxt"><div class="idg-now" id="idg-now">Ready</div><div class="idg-secs" id="idg-secs"></div></div>
+      </div>
+    </div>
+    <div class="idg-meta" id="idg-meta" aria-live="polite"></div>
+    <div class="idg-bar"><div id="idg-prog"></div></div>
+
+    <div class="idg-btns">
+      <button class="idg-go" id="idg-go">Start</button>
+      <button class="idg-sec" id="idg-skip" hidden title="Skip to next word">Next</button>
+      <button class="idg-sec idg-stopbtn" id="idg-stop" hidden>Stop</button>
+    </div>
+    <div class="idg-keys"><kbd>Space</kbd> start / pause · <kbd>→</kbd> next · <kbd>Esc</kbd> stop</div>
+    <div class="idg-warn" id="idg-warn"></div>
+
+    <section class="idg-review" id="idg-review" hidden>
+      <h2>Session review</h2>
+      <div class="idg-score" id="idg-score"></div>
+      <ul class="idg-list" id="idg-list"></ul>
+      <div class="idg-hint">Tap a word to mark it missed (no ideogram in time). Tap again to undo.</div>
+    </section>
+
+    <fieldset>
+      <legend>Voice</legend>
+      <label class="idg-row" id="idg-lang-r" hidden><span>Language</span><select id="idg-lang"></select></label>
+      <label class="idg-row"><span>Voice</span><select id="idg-src"></select></label>
+      <div id="idg-bvoice">
+        <label class="idg-row"><span>Browser voice</span><select id="idg-voice"></select></label>
+        <label class="idg-row"><span>Speed</span><span class="idg-inline"><input type="range" id="idg-rate" min="0.6" max="1.4" step="0.05"><span class="idg-val" id="idg-rate-v"></span></span></label>
+      </div>
+      <label class="idg-row"><span>Volume</span><span class="idg-inline"><input type="range" id="idg-vol" min="0.2" max="1" step="0.05"><span class="idg-val" id="idg-vol-v"></span></span></label>
+      <label class="idg-row"><span>Beep before each word</span><input type="checkbox" id="idg-beep"></label>
+      <div class="idg-row"><span></span><button class="idg-test" id="idg-testv">Test voice</button></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Session</legend>
+      <label class="idg-row"><span>Words per session</span>
+        <select id="idg-len"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="0">All in pool</option></select></label>
+      <label class="idg-row"><span>Pace</span>
+        <select id="idg-mode">
+          <option value="smooth">Smooth: a little shorter every word</option>
+          <option value="steps">Steps: shorter every few words</option>
+          <option value="fixed">Fixed: same time for every word</option>
+        </select></label>
+      <label class="idg-row"><span id="idg-g0-l">Time per word at start (s)</span><input type="number" id="idg-g0" min="0.5" max="30" step="0.5"></label>
+      <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0.5" max="30" step="0.5"></label>
+      <label class="idg-row" id="idg-dec-r"><span>Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
+      <label class="idg-row" id="idg-every-r"><span>Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
+      <div class="idg-pace" id="idg-pace"></div>
+      <label class="idg-row"><span>Show word on screen</span><input type="checkbox" id="idg-show"></label>
+      <div class="idg-row" style="display:block"><span>Categories</span>
+        <div class="idg-cats" id="idg-cats"></div></div>
+      <div class="idg-hint" id="idg-pool"></div>
+    </fieldset>
+
+    <p class="idg-note">Words are pre-recorded with the open-source Kokoro voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.</p>
+  </div>
+</div>
+
+<!--CONFIG-->
+<!--AUDIO-->
+<script>
+(function () {
+  "use strict";
+  // ─── Words and voices come from tools/wordlists/*.json, injected by tools/build.py as #idg-config ───
+  var CFG = null; try { CFG = JSON.parse(document.getElementById("idg-config").textContent); } catch (e) {}
+  if (!CFG || !CFG.languages || !CFG.languages.length) {
+    document.getElementById("idg-app").insertAdjacentHTML("afterbegin", '<p style="color:#a33a2e;padding:16px">Ideogram Drills: word list missing. Rebuild with tools/build.py.</p>');
+    return;
+  }
+  var LANGS = CFG.languages;          // [{code, name, voices:[{id,label}], categories:{name:[words]}}]
+  var L = LANGS[0], CATS = {}, CAT_NAMES = [], RVOICES = [];
+  function setLang(code) {
+    L = LANGS.filter(function (x) { return x.code === code; })[0] || LANGS[0];
+    CATS = L.categories; CAT_NAMES = Object.keys(CATS);
+    RVOICES = L.voices.map(function (v) { return v.id; });
+  }
+
+  var root = document.getElementById("idg-app");
+  var $ = function (id) { return document.getElementById("idg-" + id); };
+  var synth = window.speechSynthesis || null;
+  var ARC_LEN = 2 * Math.PI * 44;
+
+  // ─── Settings (remembered in localStorage when available) ───
+  // Where the recorded words come from: embedded in this page (#idg-audio), or MP3 files at AUDIO_BASE/<voice>/<word>.mp3
+  var AUDIO_BASE = "__AUDIO_BASE__";
+  var EMB = null; try { var ae = document.getElementById("idg-audio"); if (ae) EMB = JSON.parse(ae.textContent); } catch (e) {}
+  if (AUDIO_BASE.indexOf("__") === 0) AUDIO_BASE = "";
+  var DEFAULTS = { lang:"", src:"all", voice:"", rate:0.9, vol:1, beep:true, len:"50", mode:"smooth", g0:5, g1:1.5, dec:1, every:20, show:false, catsBy:{} };
+  var S = load();
+  function load() {
+    var s = {}; try { s = JSON.parse(localStorage.getItem("idg-settings") || "{}") || {}; } catch (e) {}
+    var o = {}; for (var k in DEFAULTS) o[k] = (k in s) ? s[k] : DEFAULTS[k];
+    if (s.cats && !s.catsBy) o.catsBy = { en: s.cats };      // settings saved by v0.2–v0.4
+    if (!o.catsBy || typeof o.catsBy !== "object") o.catsBy = {};
+    if (o.src === "both") o.src = "all";
+    return o;
+  }
+  // Point S.cats at the selected categories of the current language (all of them by default)
+  function fixCats() {
+    var c = (S.catsBy[L.code] || []).filter(function (x) { return CATS[x]; });
+    if (!c.length) c = CAT_NAMES.slice();
+    S.catsBy[L.code] = c; S.cats = c;
+  }
+  setLang(S.lang); S.lang = L.code; fixCats();
+  function save() { try { var o = {}; for (var k in DEFAULTS) o[k] = S[k]; localStorage.setItem("idg-settings", JSON.stringify(o)); } catch (e) {} }
+
+  // ─── Voices: rank natural / enhanced voices first, hide novelty voices ───
+  var NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Pipe Organ|Fred|Junior|Ralph|Kathy|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
+  function score(v) {
+    var n = v.name, s = 0;
+    if (/natural|neural/i.test(n)) s += 6;
+    if (/online/i.test(n)) s += 2;
+    if (/premium/i.test(n)) s += 5;
+    if (/enhanced/i.test(n)) s += 4;
+    if (/^Google/i.test(n)) s += 3;
+    if (/Samantha|Ava|Allison|Serena|Daniel|Karen|Moira|Tessa|Aria|Jenny|Guy|Libby|Sonia|Ryan/i.test(n)) s += 1;
+    if (/en-(US|GB)/i.test(v.lang)) s += 0.5;
+    return s;
+  }
+  var voices = [];
+  function loadVoices() {
+    if (!synth) return;
+    var re = new RegExp("^" + L.code.split("-")[0], "i");
+    var all = synth.getVoices().filter(function (v) { return re.test(v.lang) && !NOVELTY.test(v.name); });
+    if (!all.length) all = synth.getVoices().filter(function (v) { return re.test(v.lang); });
+    all.sort(function (a, b) { return score(b) - score(a) || a.name.localeCompare(b.name); });
+    voices = all;
+    var sel = $("voice"); sel.innerHTML = "";
+    var best = document.createElement("optgroup"); best.label = "Recommended";
+    var rest = document.createElement("optgroup"); rest.label = "Other";
+    all.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v.name; o.textContent = v.name.replace(/^Microsoft /, "").replace(/ - English.*$/, "") + " (" + v.lang + ")";
+      (score(v) >= 4 ? best : rest).appendChild(o);
+    });
+    if (best.children.length) sel.appendChild(best);
+    if (rest.children.length) sel.appendChild(rest);
+    if (!best.children.length) { while (rest.firstChild) sel.appendChild(rest.firstChild); rest.remove && rest.remove(); }
+    var pick = all.some(function (v) { return v.name === S.voice; }) ? S.voice : (all[0] && all[0].name);
+    if (pick) sel.value = pick;
+  }
+  function currentVoice() { var n = $("voice").value; return voices.filter(function (v) { return v.name === n; })[0] || null; }
+
+  // ─── Audio cue (Web Audio beep) ───
+  var actx = null;
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}  // iOS: play even with the silent switch on
+    try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) { actx = null; }
+  }
+  function beep() {
+    if (!actx) return;
+    try {
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25 * S.vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.16);
+    } catch (e) {}
+  }
+
+  // ─── Speech: say(word) → Promise resolving when finished (with fallbacks) ───
+  var keep = null; // keep a reference: Safari can drop onend otherwise
+  function say(word) {
+    return new Promise(function (resolve) {
+      if (!synth) return resolve();
+      var done = false, fb;
+      var finish = function () { if (done) return; done = true; clearTimeout(fb); resolve(); };
+      var u = new SpeechSynthesisUtterance(word);
+      var v = currentVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = L.code;
+      u.rate = S.rate; u.volume = S.vol;
+      u.onend = finish; u.onerror = finish;
+      keep = u;
+      var go = function () { synth.speak(u); if (synth.paused) synth.resume(); };
+      if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(go, 60); } else go(); // Chrome drops speak() right after cancel()
+      fb = setTimeout(finish, 1200 + word.length * 140 / S.rate + 1500); // in case onend never fires
+    });
+  }
+  // iOS: speech must start inside a tap; a silent utterance unlocks it
+  var speechUnlocked = false;
+  function unlockSpeech() {
+    if (!synth || speechUnlocked) return;
+    try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); speechUnlocked = true; } catch (e) {}
+  }
+
+  // ─── Recorded audio (Web Audio) ───
+  function hasRecorded() { return !!(EMB || AUDIO_BASE); }
+  // Must match slug() in tools/common.py
+  function slug(w) { return w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""); }
+  var cache = {}, playing = null;
+  function decode(ab) {
+    return new Promise(function (res, rej) {
+      try { var r = actx.decodeAudioData(ab, res, rej); if (r && r.then) r.then(res, rej); } catch (e) { rej(e); }
+    });
+  }
+  function getBuffer(v, w) {
+    var key = v + "/" + w;
+    if (cache[key]) return cache[key];
+    if (!actx) return Promise.reject(new Error("no audio"));
+    var p;
+    if (EMB && EMB[v] && EMB[v][w]) {
+      var bin = atob(EMB[v][w]), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      p = Promise.resolve(u8.buffer);
+    } else if (AUDIO_BASE) {
+      p = fetch(AUDIO_BASE.replace(/\/$/, "") + "/" + v + "/" + slug(w) + ".mp3").then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+    } else p = Promise.reject(new Error("no recording"));
+    p = p.then(decode);
+    p.catch(function () { delete cache[key]; });
+    return (cache[key] = p);
+  }
+  function useRecorded() { return S.src !== "browser" && hasRecorded() && !!actx; }
+  function pickVoice() { return S.src === "all" ? RVOICES[Math.floor(Math.random() * RVOICES.length)] : S.src; }
+  function prefetch(w) { if (!useRecorded() || !w) return; (S.src === "all" ? RVOICES : [S.src]).forEach(function (v) { getBuffer(v, w).catch(function () {}); }); }
+  function playBuffer(buf) {
+    return new Promise(function (res) {
+      var src = actx.createBufferSource(), g = actx.createGain(), done = false, fb;
+      var fin = function () { if (done) return; done = true; clearTimeout(fb); if (playing === src) playing = null; res(); };
+      g.gain.value = S.vol; src.buffer = buf; src.connect(g); g.connect(actx.destination);
+      src.onended = fin; fb = setTimeout(fin, buf.duration * 1000 + 800);
+      playing = src; src.start();
+    });
+  }
+  // speak(word): recorded voice when available, browser voice otherwise
+  function speak(word) {
+    if (!useRecorded()) return say(word);
+    return getBuffer(pickVoice(), word).then(playBuffer, function () { return say(word); });
+  }
+  function hush() {
+    try { if (playing) playing.stop(); } catch (e) {} playing = null;
+    if (synth) synth.cancel();
+  }
+
+  // ─── Wake lock ───
+  var wake = null;
+  function lockScreen() { try { if (navigator.wakeLock && !wake) navigator.wakeLock.request("screen").then(function (w) { wake = w; w.addEventListener("release", function () { wake = null; }); }).catch(function () {}); } catch (e) {} }
+  function unlockScreen() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && state === "running") lockScreen(); });
+
+  // ─── Session state ───
+  var state = "idle";            // idle | running | paused
+  var order = [], idx = 0, runId = 0, missed = {}, reached = 0;
+  var gapTimer = null, raf = null, gapEnd = 0, gapLen = 0, gapLeft = 0;
+
+  function pool() {
+    var w = []; S.cats.forEach(function (c) { w = w.concat(CATS[c]); }); return w;
+  }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // Time for word i (0-based) in a session of n words
+  function gapAt(i, n) {
+    var g0 = +S.g0, g1 = +S.g1, g;
+    if (S.mode === "fixed" || n <= 1) g = g0;
+    else if (S.mode === "steps") g = Math.max(Math.min(g0, g1), g0 - Math.floor(i / Math.max(1, +S.every)) * (+S.dec));
+    else g = g0 + (g1 - g0) * (i / (n - 1));
+    return Math.max(0.5, Math.round(g * 10) / 10);
+  }
+  function gapFor(i) { return gapAt(i, order.length); }
+  function sessionLen() { var n = pool().length; return Math.min(+S.len || n, n); }
+  function paceText() {
+    var n = sessionLen(), f = function (x) { return (x % 1 ? x.toFixed(1) : String(x)) + " s"; };
+    if (!n) return "";
+    if (S.mode === "fixed" || n === 1) return "Every word: " + f(gapAt(0, n)) + " · " + n + " words";
+    if (S.mode === "steps") {
+      var parts = [], k = Math.max(1, +S.every), i = 0;
+      while (i < n && parts.length < 12) { var g = gapAt(i, n), j = i; while (j < n && gapAt(j, n) === g) j++; parts.push(f(g) + " (words " + (i + 1) + (j - 1 > i ? "–" + j : "") + ")"); i = j; }
+      return parts.join(" → ") + (i < n ? " → …" : "");
+    }
+    return f(gapAt(0, n)) + " → " + f(gapAt(Math.floor((n - 1) / 2), n)) + " → " + f(gapAt(n - 1, n)) + " over " + n + " words";
+  }
+
+  function setRing(frac, speaking) {
+    var a = $("arc");
+    a.style.strokeDasharray = ARC_LEN;
+    a.style.strokeDashoffset = ARC_LEN * (1 - Math.max(0, Math.min(1, frac)));
+    a.classList.toggle("speaking", !!speaking);
+  }
+  function setNow(t) { $("now").textContent = t; }
+  function setSecs(t) { $("secs").textContent = t; }
+
+  function tick() {
+    var left = Math.max(0, gapEnd - performance.now());
+    setRing(gapLen ? left / gapLen : 0);
+    setSecs((left / 1000).toFixed(1) + " s");
+    if (left > 0 && state === "running") raf = requestAnimationFrame(tick);
+  }
+  function runGap(ms, id) {
+    gapLen = gapLen || ms; gapEnd = performance.now() + ms;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    clearTimeout(gapTimer);
+    gapTimer = setTimeout(function () { if (id === runId && state === "running") { idx++; step(); } }, ms);
+  }
+
+  function step() {
+    var id = runId;
+    if (idx >= order.length) return finish();
+    var word = order[idx], gap = gapFor(idx);
+    reached = Math.max(reached, idx + 1);
+    gapLen = 0; gapLeft = 0;
+    setNow(S.show ? word : "•"); setSecs("listen");
+    setRing(1, true);
+    $("meta").textContent = "Word " + (idx + 1) + " of " + order.length + " · " + gap.toFixed(1) + " s";
+    $("prog").style.width = ((idx + 1) / order.length * 100) + "%";
+    prefetch(order[idx + 1]);
+    if (S.beep) beep();
+    setTimeout(function () {
+      if (id !== runId || state !== "running") return;
+      speak(word).then(function () {
+        if (id !== runId || state !== "running") return;
+        gapLen = gap * 1000; runGap(gapLen, id);
+      });
+    }, S.beep ? 380 : 0);
+  }
+
+  function start() {
+    unlockAudio(); unlockSpeech();          // must happen inside the tap
+    if (!synth && !useRecorded()) { $("warn").textContent = "Audio is not supported in this browser. Try Safari, Chrome or Edge."; return; }
+    var p = pool();
+    if (!p.length) { $("warn").textContent = "Pick at least one category."; return; }
+    $("warn").textContent = "";
+    unlockAudio(); unlockSpeech();          // must happen inside the tap
+    var n = +S.len || p.length;
+    order = shuffle(p).slice(0, Math.min(n, p.length));
+    prefetch(order[0]);
+    idx = 0; missed = {}; reached = 0; runId++;
+    state = "running"; lockScreen(); ui();
+    $("review").hidden = true;
+    setNow("Get ready"); setSecs(""); setRing(1, true);
+    var id = runId;
+    setTimeout(function () { if (id === runId && state === "running") step(); }, 700);
+  }
+  function pause() {
+    if (state !== "running") return;
+    state = "paused"; runId++;
+    clearTimeout(gapTimer); cancelAnimationFrame(raf);
+    gapLeft = gapLen ? Math.max(0, gapEnd - performance.now()) : 0;
+    hush();
+    setSecs("paused"); ui();
+  }
+  function resume() {
+    if (state !== "paused") return;
+    unlockAudio(); unlockSpeech();
+    state = "running"; runId++; lockScreen(); ui();
+    if (gapLeft > 200) { setNow(S.show ? order[idx] : "•"); runGap(gapLeft, runId); }
+    else if (gapLen) { idx++; step(); }  // pause hit at the very end of a gap
+    else step();                         // paused while speaking: repeat the word
+  }
+  function next() {
+    if (state === "idle") return;
+    runId++; clearTimeout(gapTimer); cancelAnimationFrame(raf); hush();
+    idx++;
+    if (state === "paused") { state = "running"; ui(); }
+    step();
+  }
+  function stop(done) {
+    var was = state;
+    runId++; state = "idle";
+    clearTimeout(gapTimer); cancelAnimationFrame(raf);
+    hush();
+    unlockScreen(); ui();
+    setNow(done ? "Done" : "Stopped"); setSecs(""); setRing(done ? 1 : 0);
+    if (was !== "idle") review(done ? order.length : reached);
+  }
+  function finish() { $("meta").textContent = order.length + " words completed"; stop(true); }
+
+  function review(count) {
+    var words = order.slice(0, count);
+    var ul = $("list"); ul.innerHTML = "";
+    if (!words.length) { $("review").hidden = true; return; }
+    words.forEach(function (w, i) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.innerHTML = '<span class="n"></span><span class="w"></span>';
+      b.querySelector(".n").textContent = i + 1; b.querySelector(".w").textContent = w;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () {
+        missed[i] = !missed[i]; b.classList.toggle("miss", missed[i]); b.setAttribute("aria-pressed", String(!!missed[i])); scoreLine(words.length);
+      });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    scoreLine(words.length);
+    $("review").hidden = false;
+  }
+  function scoreLine(n) {
+    var m = 0; for (var k in missed) if (missed[k]) m++;
+    var g0 = gapFor(0).toFixed(1), g1 = gapFor(Math.max(0, n - 1)).toFixed(1);
+    $("score").textContent = (n - m) + " of " + n + " in time (" + Math.round((n - m) / n * 100) + "%) · time per word went from " + g0 + " s to " + g1 + " s";
+  }
+
+  function ui() {
+    var go = $("go");
+    go.textContent = state === "running" ? "Pause" : state === "paused" ? "Resume" : "Start";
+    go.classList.toggle("paused", state === "paused");
+    $("skip").hidden = state === "idle";
+    $("stop").hidden = state === "idle";
+    $("cats").querySelectorAll("button").forEach(function (b) { b.disabled = state !== "idle"; });
+    ["lang", "len", "mode", "g0", "g1", "dec", "every"].forEach(function (k) { $(k).disabled = state !== "idle"; });
+  }
+
+  // ─── Controls ───
+  function renderCats() {
+    var box = $("cats"); box.innerHTML = "";
+    CAT_NAMES.forEach(function (c) {
+      var b = document.createElement("button");
+      b.className = "idg-chip" + (S.cats.indexOf(c) >= 0 ? " on" : "");
+      b.textContent = c + " " + CATS[c].length;
+      b.setAttribute("aria-pressed", String(S.cats.indexOf(c) >= 0));
+      b.addEventListener("click", function () {
+        var i = S.cats.indexOf(c); if (i >= 0) S.cats.splice(i, 1); else S.cats.push(c);
+        save(); renderCats();
+      });
+      box.appendChild(b);
+    });
+    var n = pool().length, len = +S.len || n;
+    $("pool").textContent = n + " words in the pool" + (n && len < n ? " · " + len + " picked at random each session" : "");
+    if (state === "idle") $("meta").textContent = n + " words · shuffled each run";
+    showPace();
+  }
+  function showPace() {
+    var m = S.mode;
+    $("g0-l").textContent = m === "fixed" ? "Time per word (s)" : "Time per word at start (s)";
+    $("g1-l").textContent = m === "steps" ? "Never shorter than (s)" : "Time per word at end (s)";
+    $("g1-r").hidden = m === "fixed";
+    $("dec-r").hidden = m !== "steps";
+    $("every-r").hidden = m !== "steps";
+    $("pace").textContent = paceText();
+  }
+  function bind() {
+    $("rate").value = S.rate; $("vol").value = S.vol; $("beep").checked = S.beep;
+    $("len").value = String(S.len); $("g0").value = S.g0; $("g1").value = S.g1; $("show").checked = S.show;
+    var showVals = function () { $("rate-v").textContent = (+S.rate).toFixed(2) + "×"; $("vol-v").textContent = Math.round(S.vol * 100) + "%"; };
+    showVals();
+    $("rate").addEventListener("input", function () { S.rate = +this.value; showVals(); save(); });
+    $("vol").addEventListener("input", function () { S.vol = +this.value; showVals(); save(); });
+    $("beep").addEventListener("change", function () { S.beep = this.checked; save(); });
+    $("show").addEventListener("change", function () { S.show = this.checked; save(); if (state !== "idle" && order[idx]) setNow(S.show ? order[idx] : "•"); });
+    $("len").addEventListener("change", function () { S.len = this.value; save(); renderCats(); });
+    $("mode").value = S.mode; $("dec").value = S.dec; $("every").value = S.every;
+    var num = function (k, lo, hi, int) { return function () { var v = parseFloat(this.value); if (int) v = Math.round(v); if (isFinite(v) && v >= lo && v <= hi) { S[k] = v; save(); } this.value = S[k]; showPace(); }; };
+    $("g0").addEventListener("change", num("g0", 0.5, 30)); $("g1").addEventListener("change", num("g1", 0.5, 30));
+    $("dec").addEventListener("change", num("dec", 0.1, 10)); $("every").addEventListener("change", num("every", 1, 200, true));
+    ["g0", "g1", "dec", "every"].forEach(function (k) { $(k).addEventListener("input", function () { var v = parseFloat(this.value); if (isFinite(v) && v > 0) { var old = S[k]; S[k] = k === "every" ? Math.max(1, Math.round(v)) : v; $("pace").textContent = paceText(); S[k] = old; } }); });
+    $("mode").addEventListener("change", function () { S.mode = this.value; save(); showPace(); });
+    $("voice").addEventListener("change", function () { S.voice = this.value; save(); });
+    // Language picker (only shown when the build has more than one language)
+    var ls = $("lang");
+    LANGS.forEach(function (x) { var o = document.createElement("option"); o.value = x.code; o.textContent = x.name; ls.appendChild(o); });
+    ls.value = L.code; $("lang-r").hidden = LANGS.length < 2;
+    ls.addEventListener("change", function () {
+      S.lang = this.value; setLang(S.lang); fixCats(); save();
+      buildSrc(); showSrc(); loadVoices(); renderCats();
+    });
+    // Voice choices: all recorded voices of the language at random, each recorded voice, or the browser voice
+    var buildSrc = function () {
+      var sel = $("src"); sel.innerHTML = "";
+      var add = function (v, t) { var o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
+      if (hasRecorded()) {
+        if (L.voices.length > 1) add("all", "Recorded: all voices, random");
+        L.voices.forEach(function (v) { add(v.id, "Recorded: " + v.label); });
+      }
+      add("browser", "Browser voice" + (hasRecorded() ? " (backup)" : ""));
+      var ok = Array.prototype.some.call(sel.options, function (o) { return o.value === S.src; });
+      if (!ok) S.src = sel.options[0].value;
+      sel.value = S.src;
+    };
+    buildSrc();
+    function showSrc() { $("bvoice").hidden = S.src !== "browser"; $("rate").closest(".idg-row").hidden = S.src !== "browser"; }
+    showSrc();
+    $("src").addEventListener("change", function () { S.src = this.value; save(); showSrc(); });
+    $("testv").addEventListener("click", function () {
+      unlockAudio(); unlockSpeech(); if (state === "running") return;
+      if (S.beep) beep(); setTimeout(function () { hush(); speak(shuffle(pool().length ? pool() : CATS[CAT_NAMES[0]])[0]); }, S.beep ? 380 : 0);
+    });
+    $("go").addEventListener("click", function () { state === "running" ? pause() : state === "paused" ? resume() : start(); });
+    $("skip").addEventListener("click", next);
+    $("stop").addEventListener("click", function () { stop(false); });
+    document.addEventListener("keydown", function (e) {
+      var t = e.target && e.target.tagName;
+      if (t === "INPUT" || t === "SELECT" || t === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
+      if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) $("go").click(); }
+      else if (e.key === "ArrowRight" && state !== "idle") { e.preventDefault(); next(); }
+      else if (e.key === "Escape" && state !== "idle") { e.preventDefault(); stop(false); }
+    });
+  }
+
+  document.addEventListener("keyup", function (e) { if ((e.code === "Space" || e.key === " ") && e.target && e.target.tagName === "BUTTON") e.preventDefault(); });
+  bind(); renderCats(); ui(); setRing(0);
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; setTimeout(loadVoices, 600); }
+  else if (!hasRecorded()) $("warn").textContent = "Audio is not supported in this browser. Try Safari, Chrome or Edge.";
+})();
+</script>
+</div>
+<!-- ═══ end #idg-app ═══ -->
+</body>
+</html>

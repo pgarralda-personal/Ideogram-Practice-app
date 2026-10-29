@@ -1,0 +1,13 @@
+{
+  "code": "es",
+  "name": "Español",
+  "kokoro_lang": "es",
+  "speed": 0.95,
+  "voices": [{"id": "ef_dora", "label": "Dora (femenina)"}, {"id": "em_alex", "label": "Alex (masculina)"}],
+  "pronounce": {},
+  "categories": {
+    "Tierra": ["Montaña", "Valle", "Desierto"],
+    "Agua": ["Río", "Océano", "Cascada"],
+    "Estructura": ["Puente", "Torre", "Faro"]
+  }
+}

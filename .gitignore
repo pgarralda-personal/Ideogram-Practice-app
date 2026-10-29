@@ -1,0 +1,16 @@
+# Scratch / to be deleted
+_to_delete/
+
+# Kokoro voice model (~350 MB, downloaded by make_audio.py)
+tools/models/
+
+# Python
+__pycache__/
+*.pyc
+
+# Release zips (attach to GitHub Releases instead)
+Ideogram-Drills-*.zip
+versions/*.zip
+
+# macOS
+.DS_Store

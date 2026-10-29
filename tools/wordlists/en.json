@@ -1,0 +1,17 @@
+{
+  "code": "en",
+  "name": "English",
+  "kokoro_lang": "en-us",
+  "speed": 0.95,
+  "voices": [{"id": "af_heart", "label": "Heart (female)"}, {"id": "am_michael", "label": "Michael (male)"}],
+  "pronounce": {},
+  "categories": {
+    "Land": ["Mountain", "Hill", "Valley", "Plain", "Desert", "Canyon", "Rock", "Cliff", "Cave", "Dune", "Island", "Volcano", "Crater", "Plateau", "Ridge", "Peak", "Slope", "Tundra", "Mesa", "Butte", "Ravine", "Gully", "Escarpment", "Foothills", "Outcrop", "Field", "Meadow", "Savanna", "Sand", "Soil", "Boulder", "Pebble", "Gravel", "Clay", "Limestone", "Quartz", "Crystal"],
+    "Water": ["River", "Lake", "Ocean", "Stream", "Waterfall", "Pond", "Glacier", "Swamp", "Bay", "Spring", "Reef", "Creek", "Lagoon", "Estuary", "Delta", "Reservoir", "Geyser", "Tide pool", "Rapids", "Inlet", "Strait", "Channel", "Floodplain", "Marsh", "Whirlpool", "Wave", "Current"],
+    "Structure": ["Building", "Bridge", "Road", "Car", "House", "Tower", "Fence", "Wall", "Statue", "Train", "Airplane", "Ship", "Dam", "Factory", "Lighthouse", "City", "Village", "Path", "Harbor", "Canal", "Fountain", "Skyscraper", "Stadium", "Tunnel", "Pipeline", "Warehouse", "Windmill", "Crane", "Highway", "Billboard", "Monument", "Pyramid", "Temple", "Castle", "Barn", "Silo", "Observatory", "Radar dish", "Satellite dish", "Dock", "Pier"],
+    "Vegetation": ["Tree", "Forest", "Grass", "Flower", "Bush", "Vine", "Leaf", "Branch", "Moss", "Reed", "Cactus", "Plant", "Fruit", "Seed", "Root", "Fungus", "Jungle", "Pine", "Oak", "Palm", "Fern", "Algae", "Lichen", "Mushroom", "Flower petal"],
+    "Sky": ["Sky", "Cloud", "Star", "Moon", "Sun", "Horizon", "Mist", "Rainbow", "Atmosphere", "Fog", "Aurora", "Comet", "Planet", "Galaxy", "Nebula", "Vacuum"],
+    "Energy / motion": ["Lightning", "Wind", "Fire", "Flame", "Spark", "Steam", "Smoke", "Vortex", "Explosion", "Flow", "Breeze", "Gust", "Tornado", "Eruption", "Surge", "Pulse", "Radiation", "Beam", "Flash", "Ripple", "Oscillation"],
+    "Life": ["Human", "Dog", "Bird", "Fish", "Horse", "Insect", "Cow", "Cat", "Snake", "Deer", "Bear", "Wolf", "Eagle", "Whale", "Coral", "Elephant", "Shark", "Butterfly", "Spider", "Jellyfish", "Octopus", "Penguin", "Giraffe", "Monkey", "Egg", "Bone", "Feather"]
+  }
+}
