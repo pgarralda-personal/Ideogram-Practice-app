@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ideogram Drills v0.5</title>
+<title>Ideogram Drills v0.5.1</title>
 </head>
 <body style="margin:0">
-<!-- ═══ Ideogram Drills v0.5 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<!-- ═══ Ideogram Drills v0.5.1 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
 <div id="idg-app">
 <style>
 #idg-app {
@@ -133,7 +133,7 @@
           <option value="fixed">Fixed: same time for every word</option>
         </select></label>
       <label class="idg-row"><span id="idg-g0-l">Time per word at start (s)</span><input type="number" id="idg-g0" min="0.5" max="30" step="0.5"></label>
-      <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0.5" max="30" step="0.5"></label>
+      <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0" max="30" step="0.5"></label>
       <label class="idg-row" id="idg-dec-r"><span>Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
       <label class="idg-row" id="idg-every-r"><span>Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
       <div class="idg-pace" id="idg-pace"></div>
@@ -342,7 +342,7 @@
     if (S.mode === "fixed" || n <= 1) g = g0;
     else if (S.mode === "steps") g = Math.max(Math.min(g0, g1), g0 - Math.floor(i / Math.max(1, +S.every)) * (+S.dec));
     else g = g0 + (g1 - g0) * (i / (n - 1));
-    return Math.max(0.5, Math.round(g * 10) / 10);
+    return Math.max(0, Math.round(g * 10) / 10);
   }
   function gapFor(i) { return gapAt(i, order.length); }
   function sessionLen() { var n = pool().length; return Math.min(+S.len || n, n); }
@@ -525,9 +525,9 @@
     $("len").addEventListener("change", function () { S.len = this.value; save(); renderCats(); });
     $("mode").value = S.mode; $("dec").value = S.dec; $("every").value = S.every;
     var num = function (k, lo, hi, int) { return function () { var v = parseFloat(this.value); if (int) v = Math.round(v); if (isFinite(v) && v >= lo && v <= hi) { S[k] = v; save(); } this.value = S[k]; showPace(); }; };
-    $("g0").addEventListener("change", num("g0", 0.5, 30)); $("g1").addEventListener("change", num("g1", 0.5, 30));
+    $("g0").addEventListener("change", num("g0", 0.5, 30)); $("g1").addEventListener("change", num("g1", 0, 30));
     $("dec").addEventListener("change", num("dec", 0.1, 10)); $("every").addEventListener("change", num("every", 1, 200, true));
-    ["g0", "g1", "dec", "every"].forEach(function (k) { $(k).addEventListener("input", function () { var v = parseFloat(this.value); if (isFinite(v) && v > 0) { var old = S[k]; S[k] = k === "every" ? Math.max(1, Math.round(v)) : v; $("pace").textContent = paceText(); S[k] = old; } }); });
+    ["g0", "g1", "dec", "every"].forEach(function (k) { $(k).addEventListener("input", function () { var v = parseFloat(this.value); if (isFinite(v) && (v > 0 || (k === "g1" && v === 0))) { var old = S[k]; S[k] = k === "every" ? Math.max(1, Math.round(v)) : v; $("pace").textContent = paceText(); S[k] = old; } }); });
     $("mode").addEventListener("change", function () { S.mode = this.value; save(); showPace(); });
     $("voice").addEventListener("change", function () { S.voice = this.value; save(); });
     // Language picker (only shown when the build has more than one language)

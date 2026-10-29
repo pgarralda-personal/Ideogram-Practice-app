@@ -1,6 +1,6 @@
 # Ideogram Drills: Specification
 
-Version described: **v0.5** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
+Version described: **v0.5.1** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
 
 ---
 
@@ -115,7 +115,9 @@ Rules (checked by the tools):
 `lang, src ("all" | voice id | "browser"), voice (browser voice name), rate, vol, beep, len ("20"|"50"|"100"|"0"=all), mode ("smooth"|"steps"|"fixed"), g0 (start / fixed time), g1 (end time or minimum), dec (step size s), every (words per step), show, catsBy ({lang: [category names]})`.
 Older keys are migrated on load (`src:"both"` → `"all"`, `cats` → `catsBy.en`). When adding settings, add a default in `DEFAULTS`; never rename a key without a migration.
 
-### 4.4 Pace formulas (word index i from 0, session length n, times in s, result rounded to 0.1 and never below 0.5)
+### 4.4 Pace formulas (word index i from 0, session length n, times in s, result rounded to 0.1 and never below 0)
+Allowed values: start time `g0` 0.5–30 s; end time / minimum `g1` 0–30 s (0 = the next word follows as soon as the previous one ends).
+
 - Fixed: `g0`
 - Smooth: `g0 + (g1 − g0) · i / (n − 1)`
 - Steps: `max(min(g0, g1), g0 − floor(i / every) · dec)`
@@ -201,3 +203,4 @@ Manual, on real devices:
 - **v0.3**: pre-recorded Kokoro voices (Heart, Michael), Web Audio playback, WordPress build loading MP3s.
 - **v0.4**: configurable pace (smooth / steps / fixed) with preview.
 - **v0.5**: word lists as per-language JSON; `make_audio.py` and `build.py` pipeline; language picker; accent-safe file names; this spec.
+- **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Published on GitHub Pages.
