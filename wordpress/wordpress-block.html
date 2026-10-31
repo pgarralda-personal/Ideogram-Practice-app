@@ -1,4 +1,4 @@
-<!-- ═══ Ideogram Drills v0.6 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<!-- ═══ Ideogram Drills v0.6.1 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
 <div id="idg-app">
 <style>
 #idg-app {
@@ -174,7 +174,10 @@
   var S = load();
   function load() {
     var s = {}; try { s = JSON.parse(localStorage.getItem("idg-settings") || "{}") || {}; } catch (e) {}
+    if (typeof s !== "object") s = {};
     var o = {}; for (var k in DEFAULTS) o[k] = (k in s) ? s[k] : DEFAULTS[k];
+    // Wrong type (hand-edited or corrupted): use the default
+    for (k in DEFAULTS) if (typeof o[k] !== typeof DEFAULTS[k] || (typeof o[k] === "number" && !isFinite(o[k]))) o[k] = DEFAULTS[k];
     if (s.cats && !s.catsBy) o.catsBy = { en: s.cats };      // settings saved by v0.2–v0.4
     if (!o.catsBy || typeof o.catsBy !== "object") o.catsBy = {};
     if (o.src === "both") o.src = "all";
@@ -182,7 +185,8 @@
   }
   // Point S.cats at the selected categories of the current language (all of them by default)
   function fixCats() {
-    var c = (S.catsBy[L.code] || []).filter(function (x) { return CATS[x]; });
+    var saved = S.catsBy[L.code];
+    var c = (Array.isArray(saved) ? saved : []).filter(function (x) { return Object.prototype.hasOwnProperty.call(CATS, x); });
     if (!c.length) c = CAT_NAMES.slice();
     S.catsBy[L.code] = c; S.cats = c;
   }
@@ -612,15 +616,18 @@
     document.addEventListener("keydown", function (e) {
       var t = e.target && e.target.tagName;
       if (t === "INPUT" || t === "SELECT" || t === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
+      // Embedded in another page (WordPress): only react when focus is inside the app
+      var mine = root.contains(e.target) || (root.parentNode === document.body && (e.target === document.body || e.target === document.documentElement));
+      if (!mine) return;
       if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) $("go").click(); }
       else if (e.key === "ArrowRight" && state !== "idle") { e.preventDefault(); next(); }
       else if (e.key === "Escape" && state !== "idle") { e.preventDefault(); stop(false); }
     });
   }
 
-  document.addEventListener("keyup", function (e) { if ((e.code === "Space" || e.key === " ") && e.target && e.target.tagName === "BUTTON") e.preventDefault(); });
+  document.addEventListener("keyup", function (e) { if ((e.code === "Space" || e.key === " ") && e.target && e.target.tagName === "BUTTON" && root.contains(e.target)) e.preventDefault(); });
   bind(); renderCats(); ui(); setRing(0);
-  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; setTimeout(loadVoices, 600); }
+  if (synth) { loadVoices(); synth.addEventListener("voiceschanged", loadVoices); setTimeout(loadVoices, 600); }
   else if (!hasRecorded()) $("warn").textContent = "Audio is not supported in this browser. Try Safari, Chrome or Edge.";
 })();
 </script>

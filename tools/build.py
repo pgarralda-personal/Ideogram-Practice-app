@@ -15,6 +15,11 @@ AUDIO_BASE = "/wp-content/uploads/ideogram-audio"   # where the MP3 folders live
 START, END = "<!-- ═══ Ideogram", "<!-- ═══ end #idg-app ═══ -->"
 
 
+def safe_json(obj):
+    """JSON that can't break out of a <script> tag (JSON.parse reads \\u003c etc. back as < > &)."""
+    s = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
 def main():
     langs = load_wordlists()
     if not langs:
@@ -28,13 +33,13 @@ def main():
     config = {"languages": [{"code": L["code"], "name": L["name"],
                              "voices": [{"id": v["id"], "label": v.get("label", v["id"])} for v in L["voices"]],
                              "categories": L["categories"]} for L in langs]}
-    config_tag = '<script type="application/json" id="idg-config">' + json.dumps(config, ensure_ascii=False, separators=(",", ":")) + "</script>"
+    config_tag = '<script type="application/json" id="idg-config">' + safe_json(config) + "</script>"
 
     audio = {}
     for L in langs:
         for v in L["voices"]:
             audio[v["id"]] = {w: base64.b64encode(open(audio_path(v["id"], w), "rb").read()).decode() for w in words_of(L)}
-    audio_tag = '<script type="application/json" id="idg-audio">' + json.dumps(audio, ensure_ascii=False, separators=(",", ":")) + "</script>"
+    audio_tag = '<script type="application/json" id="idg-audio">' + safe_json(audio) + "</script>"
 
     t = open(os.path.join(TOOLS, "template.html"), encoding="utf-8").read()
     for marker in ("<!--CONFIG-->", "<!--AUDIO-->", '"__AUDIO_BASE__"', START, END):

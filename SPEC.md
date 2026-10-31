@@ -1,6 +1,6 @@
 # Ideogram Drills: Specification
 
-Version described: **v0.6** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
+Version described: **v0.6.1** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
 
 ---
 
@@ -69,7 +69,13 @@ tools/wordlists/<lang>.json  ──►  tools/make_audio.py  ──►  audio/<v
 ### Embedding rules (WordPress safety)
 - Everything lives inside `<div id="idg-app">`; every CSS rule is prefixed with `#idg-app`; element ids start with `idg-`.
 - The block resets the properties themes commonly override on buttons/inputs (margin, text-transform, letter-spacing, box-shadow, height).
-- No global variables (IIFE). Keyboard shortcuts ignore keys typed in inputs/selects.
+- No global variables (IIFE). Keyboard shortcuts ignore keys typed in inputs/selects, and act only when focus is inside `#idg-app` (or on the page body when the app is the whole page), so Space still scrolls the host page. Voice-list updates use `addEventListener("voiceschanged")`, never overwriting the host's handler.
+
+### Security rules
+- Untrusted or variable text (words, categories, voice names, settings) goes into the page only through `textContent` / `.value`; `innerHTML` is used only with constant strings. No `eval`, no external scripts, fonts or CDNs.
+- `build.py` embeds JSON with `safe_json()`, which escapes `<`, `>` and `&` as `\u003c` etc., so word-list text can never close the `<script>` tag.
+- Saved settings are validated on load: a value of the wrong type falls back to its default; category names must be own keys of the word list.
+- WordPress: paste only blocks built from this repo; the iframe embed keeps the app on its own origin, away from the site's cookies and admin.
 - Alternative if a theme still interferes: embed the GitHub Pages copy with an `<iframe src="https://pgarralda-personal.github.io/Ideogram-Practice-app/ideogram-drills.html">` (no MP3 upload needed, since that file embeds the audio).
 
 ### Repository and hosting
@@ -222,3 +228,4 @@ Manual, on real devices:
 - **v0.5**: word lists as per-language JSON; `make_audio.py` and `build.py` pipeline; language picker; accent-safe file names; this spec.
 - **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Project moved to GitHub; published on GitHub Pages.
 - **v0.6**: words speed up (pitch kept) as the time per word shrinks: "Speed up words as time shortens" and "Fastest word speed" settings.
+- **v0.6.1**: security hardening after a review: escaped JSON embed, keyboard shortcuts scoped to the app, validated saved settings.
