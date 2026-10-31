@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visión sin ojos</title>
+<style>
+:root {
+  --bg:#f6f5f2; --card:#fff; --text:#1d1d1f; --muted:#6b6b70; --line:#e2e0db;
+  --accent:#2f5d8a; --accent-text:#fff; --stop:#a33a2e; --ok:#2e7d4f; --soft:#eef2f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#161618; --card:#222225; --text:#ececee; --muted:#9a9aa0; --line:#36363a;
+    --accent:#6f9fd0; --accent-text:#0d1620; --stop:#e07a6c; --ok:#6cc08f; --soft:#2a2e34; }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif; }
+main { max-width:640px; margin:0 auto; padding:24px 16px 48px; }
+h1 { font-size:24px; margin:0 0 4px; line-height:1.25; }
+h2 { font-size:17px; margin:0 0 10px; }
+h3 { font-size:12px; margin:16px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+h3:first-of-type { margin-top:4px; }
+.sub { color:var(--muted); margin:0 0 20px; font-size:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+.row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; margin-top:12px; }
+.row label { flex:1; }
+select { font:inherit; font-size:15px; padding:6px 8px; border-radius:8px; border:1px solid var(--line);
+  background:var(--bg); color:var(--text); }
+input[type=checkbox] { accent-color:var(--accent); width:20px; height:20px; margin:0; flex:0 0 auto; }
+.hint { font-size:13px; color:var(--muted); margin:4px 0 0; }
+button { font:inherit; border:0; border-radius:10px; cursor:pointer; color:inherit; }
+.go { width:100%; padding:16px; font-size:19px; font-weight:600; background:var(--accent); color:var(--accent-text); margin-top:18px; }
+.sec { padding:8px 12px; font-size:14px; background:var(--soft); color:var(--text); }
+.danger { color:var(--stop); }
+.btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+ol, ul { padding-left:20px; margin:8px 0 0; }
+li { margin-bottom:6px; font-size:15px; }
+kbd { font:inherit; font-size:12px; border:1px solid var(--line); border-radius:4px; padding:0 5px; background:var(--soft); }
+table { width:100%; border-collapse:collapse; font-size:14px; font-variant-numeric:tabular-nums; }
+th, td { text-align:left; padding:6px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+td.num, th.num { text-align:right; white-space:nowrap; }
+.tablewrap { overflow-x:auto; }
+.empty { color:var(--muted); font-size:14px; }
+.big { font-size:40px; font-weight:700; line-height:1.1; margin:6px 0; font-variant-numeric:tabular-nums; }
+.verdict { padding:12px 14px; border-radius:10px; background:var(--soft); margin-top:12px; font-size:15px; }
+.pill { display:inline-block; font-size:12px; padding:1px 8px; border-radius:999px; background:var(--soft); color:var(--muted); }
+[hidden] { display:none !important; }
+
+/* Level picker */
+.levels { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; }
+.lvl { text-align:left; padding:8px 10px; background:var(--soft); border:2px solid transparent; display:flex; gap:10px; align-items:center; }
+.lvl.on { border-color:var(--accent); background:var(--card); }
+.lvl .n { flex:0 0 26px; height:26px; border-radius:50%; background:var(--line); display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+.lvl.on .n { background:var(--accent); color:var(--accent-text); }
+.lvl .t { font-size:14px; font-weight:600; line-height:1.25; }
+.lvl .s { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.swatches { display:flex; gap:3px; margin-top:3px; }
+.swatches i { width:12px; height:12px; border-radius:3px; border:1px solid var(--line); display:inline-block; }
+.lvlinfo { margin-top:14px; padding:12px 14px; border-radius:10px; background:var(--soft); font-size:14px; }
+.lvlinfo b { font-size:15px; }
+
+.zones { display:grid; width:140px; aspect-ratio:3/4; border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:11px; margin-top:10px; }
+.zones div { display:flex; align-items:center; justify-content:center; text-align:center; border:1px dashed var(--line); padding:2px; color:var(--muted); line-height:1.2; }
+.zones b { color:var(--text); display:block; font-size:15px; }
+
+/* Session stage: full screen, no UI the eyes could rely on */
+#stage { position:fixed; inset:0; background:#000; z-index:10; touch-action:none; user-select:none;
+  -webkit-user-select:none; -webkit-touch-callout:none; cursor:none; }
+#stage svg { position:absolute; inset:0; width:100%; height:100%; }
+#stage .msg { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:#888; text-align:center; padding:24px; font-size:18px; cursor:default; }
+#stage .msg small { font-size:14px; margin-top:10px; color:#666; max-width:420px; }
+</style>
+</head>
+<body>
+<main id="home">
+  <h1>Visión sin ojos</h1>
+  <p class="sub">Practica en solitario con los ojos vendados y comprueba con números si aciertas más de lo que daría el azar. Empieza por el nivel 1 y avanza a tu ritmo.</p>
+
+  <section class="card">
+    <h2>Nivel</h2>
+    <div id="levels"></div>
+    <div class="lvlinfo" id="lvlinfo"></div>
+  </section>
+
+  <section class="card">
+    <h2>Sesión</h2>
+    <div class="row" style="margin-top:0"><label for="s-n">Ensayos (decídelo antes)</label>
+      <select id="s-n">
+        <option>10</option><option>20</option><option>25</option><option>50</option><option>100</option>
+      </select></div>
+    <div class="row"><label for="s-mode">Pantalla</label>
+      <select id="s-mode">
+        <option value="show">Mostrar el objetivo</option>
+        <option value="control">Control: no mostrar nada</option>
+      </select></div>
+    <p class="hint">En una sesión de control la pantalla no muestra el objetivo y solo puedes adivinar. Sirve para ver cómo se ve el azar y compararlo.</p>
+    <div class="row"><label for="s-fb">Decirme si acerté después de cada ensayo</label><input type="checkbox" id="s-fb" checked></div>
+    <div class="row" id="row-eq"><label for="s-eq">Colores con el mismo brillo</label><input type="checkbox" id="s-eq" checked></div>
+    <p class="hint" id="hint-eq">Recomendado. A través de los párpados se nota si la pantalla está más clara u oscura; así el brillo no delata el color.</p>
+    <div class="row"><label for="s-voice">Responder hablando</label><input type="checkbox" id="s-voice"></div>
+    <p class="hint" id="hint-voice"></p>
+    <button class="go" id="start">Empezar</button>
+  </section>
+
+  <section class="card">
+    <h2>Cómo responder con los ojos vendados</h2>
+    <ul>
+      <li><b>Teclado:</b> teclas <kbd>1</kbd> a <kbd id="kmax">2</kbd><span id="letterkeys"></span>. <kbd>R</kbd> repite las opciones. <kbd>Esc</kbd> termina.</li>
+      <li><b>Pantalla táctil:</b> toca la zona de la respuesta (ver dibujo). Mantén el dedo 2 segundos para terminar.</li>
+      <li><b>Voz:</b> di el nombre (“rojo”, “estrella roja”, “sol”…) o el número de la opción.</li>
+    </ul>
+    <div class="zones" id="zones"></div>
+    <p class="hint">Cada vez que aparece un objetivo suena un pitido. Antes de empezar, la app lee las opciones en voz alta.</p>
+  </section>
+
+  <section class="card">
+    <h2>Cómo hacer una prueba justa sin ayudante</h2>
+    <ol>
+      <li><b>Bloquea el hueco de la nariz.</b> Casi todos los antifaces dejan ver hacia abajo. Usa un antifaz opaco y tapa ese hueco con algodón o cinta, o usa gafas de natación pintadas por dentro.</li>
+      <li><b>Mejor todavía:</b> mete el móvil o la tablet en una caja o bajo una tela gruesa y mete solo las manos. Gira la cabeza hacia otro lado.</li>
+      <li><b>Decide el número de ensayos antes</b> y no pares cuando vas mal. La app guarda todos los ensayos, también los de sesiones que no terminas.</li>
+      <li><b>Un buen resultado aislado no prueba nada.</b> Por pura suerte, 1 de cada 20 sesiones sale “significativa”. Lo que cuenta es el total acumulado.</li>
+      <li><b>Si un día obtienes un resultado muy alto,</b> repítelo con condiciones más estrictas (caja, tela) antes de sacar conclusiones.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Resultados acumulados</h2>
+    <div id="totals"></div>
+  </section>
+
+  <section class="card">
+    <h2>Historial de sesiones</h2>
+    <div id="history"></div>
+    <div class="btnrow">
+      <button class="sec" id="export">Exportar ensayos (CSV)</button>
+      <button class="sec danger" id="reset">Borrar historial</button>
+    </div>
+  </section>
+</main>
+
+<main id="result" hidden>
+  <h1>Resultado de la sesión</h1>
+  <p class="sub" id="r-sub"></p>
+  <section class="card">
+    <div class="big" id="r-big"></div>
+    <div id="r-detail"></div>
+    <div id="r-dims"></div>
+    <div class="verdict" id="r-verdict"></div>
+  </section>
+  <section class="card">
+    <h2>Ensayos</h2>
+    <div class="tablewrap"><table id="r-trials"></table></div>
+  </section>
+  <div class="btnrow">
+    <button class="sec" id="again" style="flex:1;padding:14px">Repetir nivel</button>
+    <button class="sec" id="next" style="flex:1;padding:14px">Siguiente nivel →</button>
+  </div>
+  <button class="go" id="back">Volver</button>
+</main>
+
+<div id="stage" hidden></div>
+
+<script>
+'use strict';
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// ───────── Building blocks ─────────
+// eq = colors with matched relative luminance (~0.21, same as the gray shown between trials)
+const COLOR_DEF = {
+  rojo:     { m:'rojo',     f:'roja',     fp:'rojas',     words:['rojo','roja','rojas'],                 vivid:'#ff0000', eq:'#ff0000' },
+  azul:     { m:'azul',     f:'azul',     fp:'azules',    words:['azul','azules'],                       vivid:'#0033ff', eq:'#6b6bff' },
+  verde:    { m:'verde',    f:'verde',    fp:'verdes',    words:['verde','verdes'],                      vivid:'#00c000', eq:'#009600' },
+  amarillo: { m:'amarillo', f:'amarilla', fp:'amarillas', words:['amarillo','amarilla','amarillas'],     vivid:'#ffe000', eq:'#848400' },
+  naranja:  { m:'naranja',  f:'naranja',  fp:'naranjas',  words:['naranja','naranjas'],                 vivid:'#ff8000', eq:'#c86400' },
+  morado:   { m:'morado',   f:'morada',   fp:'moradas',   words:['morado','morada','moradas','violeta','lila','purpura'], vivid:'#9000ff', eq:'#ad4dff' }
+};
+const GRAY_EQ = '#7f7f7f';
+// The five Zener card symbols. g = grammatical form for the color word (m, f, fp = feminine plural)
+const SHAPE_DEF = {
+  circulo:  { name:'círculo',  g:'m',  words:['circulo','circular','redondo','redonda'] },
+  cruz:     { name:'cruz',     g:'f',  words:['cruz','mas'] },
+  ondas:    { name:'ondas',    g:'fp', words:['ondas','onda','olas','ola','ondulado','ondulada','onduladas','lineas'] },
+  cuadrado: { name:'cuadrado', g:'m',  words:['cuadrado','cuadro'] },
+  estrella: { name:'estrella', g:'f',  words:['estrella'] }
+};
+const LETTER_DEF = {
+  A: { say:'a', words:['a'] }, O: { say:'o', words:['o'] },
+  T: { say:'te', words:['te','t'] }, X: { say:'equis', words:['equis','x'] }
+};
+
+// Every item: id, name (shown), say (spoken), match (list of word groups; all groups must be heard),
+// plus what to draw (bgHex | bg color | shape | letter | text, with optional fill color) and dims for combinations.
+const colorItem = c => ({ id:c, name:COLOR_DEF[c].m, match:[COLOR_DEF[c].words], bg:c });
+const shapeItem = (s, c) => ({
+  id: c ? `${s}-${c}` : s,
+  name: SHAPE_DEF[s].name + (c ? ' ' + COLOR_DEF[c][SHAPE_DEF[s].g] : ''),
+  match: c ? [SHAPE_DEF[s].words, COLOR_DEF[c].words] : [SHAPE_DEF[s].words],
+  shape: s, fill: c || null, dims: c ? { forma:s, color:c } : null });
+const letterItem = (l, c) => ({
+  id: c ? `${l}-${c}` : l,
+  name: l + (c ? ' ' + COLOR_DEF[c].f : ''),
+  say: LETTER_DEF[l].say + (c ? ' ' + COLOR_DEF[c].f : ''),
+  match: c ? [LETTER_DEF[l].words, COLOR_DEF[c].words] : [LETTER_DEF[l].words],
+  letter: l, fill: c || null, key: c ? null : l.toLowerCase(), dims: c ? { letra:l, color:c } : null });
+const wordItem = w => ({ id:w, name:w, say:w.toLowerCase(), match:[[norm(w)]], text:w });
+const product = (a, b, f) => a.flatMap(x => b.map(y => f(x, y)));
+
+const LEVELS = [
+  { id:'bn', group:'Colores', name:'Blanco o negro',
+    note:'Máximo contraste, para calentar. Ojo: la diferencia de luz se nota a través de los párpados, así que este nivel no sirve como prueba.',
+    items:[ { id:'blanco', name:'blanco', match:[['blanco','blanca']], bgHex:'#ffffff' },
+            { id:'negro',  name:'negro',  match:[['negro','negra']],   bgHex:'#000000' } ] },
+  { id:'c2', group:'Colores', name:'2 colores', items:['rojo','azul'].map(colorItem) },
+  { id:'c3', group:'Colores', name:'3 colores', items:['rojo','azul','verde'].map(colorItem) },
+  { id:'c4', group:'Colores', name:'4 colores', items:['rojo','azul','verde','amarillo'].map(colorItem) },
+  { id:'c6', group:'Colores', name:'6 colores', items:['rojo','azul','verde','amarillo','naranja','morado'].map(colorItem),
+    note:'Con 6 opciones responder hablando es lo más cómodo.' },
+  { id:'z2', group:'Formas (cartas Zener)', name:'2 símbolos Zener', items:['circulo','cruz'].map(s => shapeItem(s)),
+    note:'Símbolos de las cartas Zener, blancos sobre negro y todos con la misma superficie, para que la cantidad de luz no los delate.' },
+  { id:'z3', group:'Formas (cartas Zener)', name:'3 símbolos Zener', items:['circulo','cruz','ondas'].map(s => shapeItem(s)) },
+  { id:'z5', group:'Formas (cartas Zener)', name:'5 cartas Zener', items:['circulo','cruz','ondas','cuadrado','estrella'].map(s => shapeItem(s)),
+    note:'La baraja Zener completa, como en los experimentos clásicos: el azar es 1 de cada 5 (20 %).' },
+  { id:'zc4', group:'Formas y colores', name:'2 Zener × 2 colores', items:product(['circulo','cruz'], ['rojo','azul'], shapeItem),
+    note:'Hay que acertar las dos cosas. La app también cuenta por separado si acertaste la forma o el color.' },
+  { id:'zc6', group:'Formas y colores', name:'3 Zener × 2 colores', items:product(['circulo','cruz','ondas'], ['rojo','azul'], shapeItem) },
+  { id:'l2', group:'Letras', name:'2 letras', items:['O','X'].map(l => letterItem(l)),
+    note:'Puedes responder pulsando la propia letra en el teclado.' },
+  { id:'l4', group:'Letras', name:'4 letras', items:['A','O','T','X'].map(l => letterItem(l)) },
+  { id:'lc4', group:'Letras y colores', name:'2 letras × 2 colores', items:product(['O','X'], ['rojo','azul'], letterItem) },
+  { id:'p2', group:'Palabras', name:'2 palabras', items:['SOL','MAR'].map(wordItem),
+    note:'Palabras cortas de 3 letras. Responder hablando funciona muy bien aquí.' },
+  { id:'p4', group:'Palabras', name:'4 palabras', items:['SOL','MAR','PAN','LUZ'].map(wordItem) }
+];
+LEVELS.forEach((L, i) => { L.num = i + 1; L.k = L.items.length;
+  L.hasColor = L.items.some(it => it.bg || it.fill);
+  L.dimNames = L.items[0].dims ? Object.keys(L.items[0].dims) : []; });
+const LEVEL = Object.fromEntries(LEVELS.map(L => [L.id, L]));
+const NUM_WORDS = [['1','uno','una'],['2','dos'],['3','tres'],['4','cuatro'],['5','cinco'],['6','seis']];
+const DIM_LABEL = { forma:'Forma', color:'Color', letra:'Letra' };
+// Touch zones: columns × rows, numbered in reading order
+// With 5 options the last zone takes the whole bottom row.
+const LAYOUT = { 2:[2,1], 3:[3,1], 4:[2,2], 5:[2,3], 6:[2,3] };
+const sayOf = it => it.say || it.name;
+
+// ───────── Storage (never required for the app to work) ─────────
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let trials = LS.get('vso.trials', []);
+let sessions = LS.get('vso.sessions', []);
+if (!Array.isArray(trials)) trials = [];
+if (!Array.isArray(sessions)) sessions = [];
+trials = trials.filter(t => t && LEVEL[t.level]);      // drop records from older versions
+sessions = sessions.filter(s => s && LEVEL[s.level]);
+const saveAll = () => { LS.set('vso.trials', trials); LS.set('vso.sessions', sessions); };
+
+// ───────── Settings ─────────
+const $ = id => document.getElementById(id);
+const S = { n:$('s-n'), mode:$('s-mode'), fb:$('s-fb'), eq:$('s-eq'), voice:$('s-voice') };
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let levelId = 'bn';
+(function loadSettings() {
+  const s = LS.get('vso.settings', {});
+  if (s && typeof s === 'object') {
+    if (LEVEL[s.level]) levelId = s.level;
+    if (['10','20','25','50','100'].includes(String(s.n))) S.n.value = String(s.n);
+    if (s.mode === 'show' || s.mode === 'control') S.mode.value = s.mode;
+    if (typeof s.fb === 'boolean') S.fb.checked = s.fb;
+    if (typeof s.eq === 'boolean') S.eq.checked = s.eq;
+    if (typeof s.voice === 'boolean') S.voice.checked = s.voice && !!SR;
+  }
+  if (!SR) { S.voice.checked = false; S.voice.disabled = true;
+    $('hint-voice').textContent = 'Este navegador no reconoce voz. Prueba en Chrome o Safari.'; }
+  else $('hint-voice').textContent = 'Usa el reconocimiento de voz del navegador (puede necesitar internet y pedir permiso de micrófono).';
+})();
+function settings() {
+  return { level:levelId, n:+S.n.value, mode:S.mode.value, fb:S.fb.checked, eq:S.eq.checked, voice:S.voice.checked && !!SR };
+}
+function onSettings() {
+  const s = settings(), L = LEVEL[s.level];
+  LS.set('vso.settings', s);
+  $('row-eq').hidden = $('hint-eq').hidden = !L.hasColor || L.id === 'bn';
+  $('kmax').textContent = L.k;
+  const keys = L.items.filter(it => it.key).map(it => `<kbd>${it.key.toUpperCase()}</kbd>`);
+  $('letterkeys').innerHTML = keys.length ? ' o las letras ' + keys.join(' ') : '';
+  drawZones(L);
+  renderLevels();
+}
+Object.values(S).forEach(el => el.addEventListener('change', onSettings));
+function setLevel(id) { levelId = id; onSettings(); }
+
+function drawZones(L) {
+  const [c, r] = LAYOUT[L.k];
+  const z = $('zones');
+  z.style.gridTemplateColumns = `repeat(${c},1fr)`; z.style.gridTemplateRows = `repeat(${r},1fr)`;
+  const spare = c * r - L.k; // the last zone stretches over unused cells
+  z.innerHTML = L.items.map((it, i) => `<div${i === L.k - 1 && spare ? ` style="grid-column:span ${spare + 1}"` : ''}><span><b>${i+1}</b>${esc(it.name)}</span></div>`).join('');
+}
+
+// ───────── Randomness (crypto, unbiased) ─────────
+function randInt(k) {
+  const a = new Uint32Array(1), lim = Math.floor(0x100000000 / k) * k;
+  do crypto.getRandomValues(a); while (a[0] >= lim);
+  return a[0] % k;
+}
+
+// ───────── Sound & speech ─────────
+let actx = null;
+function tone(freq, ms, vol = 0.15) {
+  if (!actx) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.frequency.value = freq; o.type = 'sine';
+  g.gain.setValueAtTime(vol, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + ms / 1000);
+  o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + ms / 1000);
+}
+let esVoice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  esVoice = vs.find(v => /^es[-_]ES/i.test(v.lang)) || vs.find(v => /^es/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text) {
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES'; if (esVoice) u.voice = esVoice; u.rate = 1.05;
+    let done = false; const fin = () => { if (!done) { done = true; res(); } };
+    u.onend = fin; u.onerror = fin;
+    setTimeout(fin, 1500 + text.length * 90); // safety net if onend never fires
+    speechSynthesis.speak(u);
+  });
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+// ───────── Shapes with equal area (so total light doesn't give them away) ─────────
+function polyArea(p) { let a = 0; for (let i = 0; i < p.length; i++) { const [x1,y1] = p[i], [x2,y2] = p[(i+1)%p.length]; a += x1*y2 - x2*y1; } return Math.abs(a) / 2; }
+function regular(n, r, rot = -Math.PI/2, inner = null) {
+  const pts = [], m = inner ? n * 2 : n;
+  for (let i = 0; i < m; i++) { const rr = inner && i % 2 ? inner * r : r, t = rot + i * 2 * Math.PI / m; pts.push([rr*Math.cos(t), rr*Math.sin(t)]); }
+  return pts;
+}
+const SHAPE_AREA = 0.8; // in a 2×2 viewBox
+const f4 = v => v.toFixed(4);
+// Each entry is fill => SVG markup, scaled so every symbol covers the same area
+const SHAPES = (() => {
+  const t = 1; // cross arm thickness before scaling
+  const cross = [[-t/2,-1.5*t],[t/2,-1.5*t],[t/2,-t/2],[1.5*t,-t/2],[1.5*t,t/2],[t/2,t/2],[t/2,1.5*t],[-t/2,1.5*t],[-t/2,t/2],[-1.5*t,t/2],[-1.5*t,-t/2],[-t/2,-t/2]];
+  const polys = { circulo: regular(128, 1), cuadrado: regular(4, 1, Math.PI/4), estrella: regular(5, 1, -Math.PI/2, 0.45), cruz: cross };
+  const out = {};
+  for (const [k, p] of Object.entries(polys)) {
+    const s = Math.sqrt(SHAPE_AREA / polyArea(p));
+    const pts = p.map(([x, y]) => `${f4(x*s)},${f4(y*s)}`).join(' ');
+    out[k] = fill => `<polygon points="${pts}" fill="${fill}"/>`;
+  }
+  // Three wavy lines; stroke width chosen so the lines cover the same area as the other symbols
+  const W = 1.5, amp = 0.1, N = 120, gap = 0.42, line = [];
+  for (let i = 0; i <= N; i++) line.push([-W/2 + W*i/N, amp * Math.sin(4 * Math.PI * i / N)]);
+  let len = 0; for (let i = 1; i <= N; i++) len += Math.hypot(line[i][0]-line[i-1][0], line[i][1]-line[i-1][1]);
+  const sw = SHAPE_AREA / (3 * len);
+  const d = [-gap, 0, gap].map(dy => 'M' + line.map(([x, y]) => `${f4(x)},${f4(y + dy)}`).join(' L')).join(' ');
+  out.ondas = fill => `<path d="${d}" fill="none" stroke="${fill}" stroke-width="${f4(sw)}" stroke-linecap="butt" stroke-linejoin="round"/>`;
+  return out;
+})();
+
+// ───────── Drawing ─────────
+const stage = $('stage');
+const colorHex = (c, eq) => COLOR_DEF[c][eq ? 'eq' : 'vivid'];
+function neutralBg(L, eq) {
+  if (L.id === 'bn') return GRAY_EQ;
+  return L.items[0].bg && eq ? GRAY_EQ : '#000';
+}
+function drawItem(it, eq) {
+  stage.innerHTML = '';
+  if (it.bgHex) { stage.style.background = it.bgHex; return; }
+  if (it.bg) { stage.style.background = colorHex(it.bg, eq); return; }
+  stage.style.background = '#000';
+  const fill = it.fill ? colorHex(it.fill, eq) : '#fff';
+  const font = `font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Helvetica,Arial,sans-serif"`;
+  const inner = it.shape ? SHAPES[it.shape](fill)
+    : it.letter ? `<text x="0" y="0" fill="${fill}" font-size="1.7" ${font}>${it.letter}</text>`
+    : `<text x="0" y="0" fill="${fill}" font-size="0.8" ${font}>${esc(it.text)}</text>`;
+  stage.innerHTML = `<svg viewBox="-1 -1 2 2" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+}
+
+// ───────── Session runner ─────────
+let run = null;
+function showNeutral() { stage.innerHTML = ''; stage.style.background = neutralBg(run.L, run.s.eq); }
+function showTarget(idx) {
+  if (run.s.mode === 'control') return showNeutral();
+  drawItem(run.L.items[idx], run.s.eq);
+}
+function optionsSpeech(L) {
+  return 'Opciones: ' + L.items.map((it, i) => `${i+1}, ${sayOf(it)}`).join('. ') + '.';
+}
+
+async function startSession() {
+  const s = settings(), L = LEVEL[s.level];
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch {}
+  const sess = { id: Date.now().toString(36) + randInt(1e6).toString(36), start: new Date().toISOString(),
+    level: L.id, k: L.k, n: s.n, mode: s.mode, eq: L.hasColor ? s.eq : null, done: 0, finished: false };
+  sessions.push(sess); saveAll();
+  run = { s, L, sess, i: 0, phase: 'ready', target: -1, shownAt: 0, rec: null, wakeLock: null, list: [] };
+  document.body.style.overflow = 'hidden';
+  $('home').hidden = true; $('result').hidden = true; stage.hidden = false;
+  stage.style.background = '#000';
+  stage.innerHTML = `<div class="msg">Nivel ${L.num}: ${esc(L.name)}<br><br>Ponte el antifaz.<br>Cuando estés listo, pulsa espacio o toca la pantalla.
+    <small>${esc(optionsSpeech(L))} Esc o mantener pulsado 2 s para terminar.</small></div>`;
+  try { await (stage.requestFullscreen ? stage.requestFullscreen() : stage.webkitRequestFullscreen?.()); } catch {}
+  try { run.wakeLock = await navigator.wakeLock?.request('screen'); } catch {}
+  say(`Nivel ${L.num}, ${L.name}. Ponte el antifaz. Cuando estés listo, pulsa espacio o toca la pantalla.`);
+}
+
+async function begin() {
+  if (!run || run.phase !== 'ready') return;
+  run.phase = 'intro';
+  showNeutral();
+  await say(optionsSpeech(run.L) + ' Empezamos.');
+  await wait(600);
+  nextTrial();
+}
+
+function nextTrial() {
+  if (!run) return;
+  if (run.i >= run.s.n) return finish(false);
+  run.target = randInt(run.L.k);
+  showTarget(run.target);
+  tone(660, 120);
+  run.shownAt = performance.now();
+  run.phase = 'await';
+  listen();
+}
+
+function partialSpeech(L, tIt, aIt) {
+  if (!tIt.dims) return '';
+  const ok = L.dimNames.filter(d => tIt.dims[d] === aIt.dims[d]);
+  if (!ok.length) return '';
+  return ' Acertaste ' + (ok[0] === 'forma' || ok[0] === 'letra' ? 'la ' : 'el ') + DIM_LABEL[ok[0]].toLowerCase() + '.';
+}
+
+async function answer(idx, via) {
+  if (!run || run.phase !== 'await' || idx < 0 || idx >= run.L.k) return;
+  if (performance.now() - run.shownAt < 250) return; // ignore taps carried over from the last trial
+  run.phase = 'feedback';
+  stopListening();
+  const L = run.L, rt = Math.round(performance.now() - run.shownAt);
+  const tIt = L.items[run.target], aIt = L.items[idx], hit = idx === run.target;
+  const t = { sid: run.sess.id, t: new Date().toISOString(), level: L.id, k: L.k, mode: run.s.mode,
+    target: tIt.id, answer: aIt.id, hit, via, rt };
+  trials.push(t); run.list.push(t);
+  run.i++; run.sess.done = run.i; saveAll();
+  showNeutral();
+  if (run.s.fb) {
+    tone(hit ? 880 : 300, 160);
+    await say(hit ? `Sí, ${sayOf(tIt)}.` : `No, era ${sayOf(tIt)}.` + partialSpeech(L, tIt, aIt));
+  } else {
+    tone(520, 60, 0.08);
+    await wait(400);
+  }
+  await wait(700);
+  if (run && run.phase === 'feedback') nextTrial();
+}
+
+// Voice answers: every word group of an item must be heard (e.g. a shape word AND a color word)
+function matchSpeech(words, L) {
+  for (let i = 0; i < L.k; i++) if (L.items[i].match.every(g => g.some(w => words.includes(w)))) return i;
+  for (let i = 0; i < L.k; i++) if (NUM_WORDS[i].some(w => words.includes(w))) return i;
+  return -1;
+}
+function listen() {
+  if (!run || !run.s.voice || !SR) return;
+  stopListening();
+  const rec = new SR();
+  rec.lang = 'es-ES'; rec.interimResults = true; rec.maxAlternatives = 3; rec.continuous = false;
+  rec.onresult = e => {
+    if (!run) return;
+    for (let r = e.resultIndex; r < e.results.length; r++)
+      for (let a = 0; a < e.results[r].length; a++) {
+        const i = matchSpeech(norm(e.results[r][a].transcript).split(/[^a-z0-9]+/), run.L);
+        if (i >= 0) { answer(i, 'voz'); return; }
+      }
+  };
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      if (run) run.s.voice = false;
+      say('El reconocimiento de voz no está disponible. Usa el teclado o toca la pantalla.');
+    }
+  };
+  rec.onend = () => { if (run && run.rec === rec && run.phase === 'await' && run.s.voice) setTimeout(listen, 150); };
+  run.rec = rec;
+  try { rec.start(); } catch {}
+}
+function stopListening() {
+  if (run && run.rec) { const r = run.rec; run.rec = null; try { r.abort(); } catch {} }
+}
+
+async function finish(early) {
+  if (!run) return;
+  const r = run; run = null;
+  stopListening();
+  r.sess.finished = !early; r.sess.done = r.list.length; saveAll();
+  try { r.wakeLock?.release(); } catch {}
+  try { if (document.fullscreenElement) await document.exitFullscreen(); } catch {}
+  stage.hidden = true; stage.innerHTML = ''; document.body.style.overflow = '';
+  showResult(r.sess, r.list, early);
+}
+
+// Input on the stage
+let pressAt = 0, pressTimer = null;
+stage.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  pressAt = performance.now();
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(() => { pressAt = 0; if (run) { say('Sesión terminada.'); finish(true); } }, 2000);
+});
+stage.addEventListener('pointerup', e => {
+  clearTimeout(pressTimer);
+  if (!pressAt || !run) return;
+  pressAt = 0;
+  if (run.phase === 'ready') return begin();
+  const [c, r] = LAYOUT[run.L.k];
+  const col = Math.min(c - 1, Math.floor(c * e.clientX / innerWidth));
+  const row = Math.min(r - 1, Math.floor(r * e.clientY / innerHeight));
+  answer(Math.min(row * c + col, run.L.k - 1), 'toque');
+});
+stage.addEventListener('pointercancel', () => { clearTimeout(pressTimer); pressAt = 0; });
+stage.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (!run || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape') { e.preventDefault(); say('Sesión terminada.'); return finish(true); }
+  if (run.phase === 'ready' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); return begin(); }
+  const key = e.key.toLowerCase();
+  const byLetter = run.L.items.findIndex(it => it.key === key);
+  if (byLetter >= 0) { e.preventDefault(); return answer(byLetter, 'teclado'); }
+  if (key === 'r') { if (run.phase === 'await') say(optionsSpeech(run.L)); return; }
+  if (/^[1-9]$/.test(key)) { e.preventDefault(); answer(+key - 1, 'teclado'); }
+});
+// Leaving fullscreen (e.g. Esc on Mac Safari swallows the key) shouldn't trap the session
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && run && run.phase !== 'ready') { say('Sesión terminada.'); finish(true); } });
+
+// ───────── Statistics ─────────
+const lfCache = [0];
+function logFact(n) { for (let i = lfCache.length; i <= n; i++) lfCache[i] = lfCache[i-1] + Math.log(i); return lfCache[n]; }
+// P(X >= k) for X ~ Binomial(n, p)
+function binomTail(k, n, p) {
+  if (k <= 0) return 1; if (k > n) return 0;
+  let s = 0;
+  for (let i = k; i <= n; i++) s += Math.exp(logFact(n) - logFact(i) - logFact(n-i) + i*Math.log(p) + (n-i)*Math.log(1-p));
+  return Math.min(1, s);
+}
+function hitsNeeded(n, p, alpha = 0.05) { for (let k = 0; k <= n; k++) if (binomTail(k, n, p) <= alpha) return k; return null; }
+function erfc(x) { const t = 1/(1+0.5*Math.abs(x)); const y = t*Math.exp(-x*x-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))); return x >= 0 ? y : 2 - y; }
+// hits = how many were right; chances = per-trial probability of a lucky hit
+function stats(hits, chances) {
+  const n = chances.length, expect = chances.reduce((a, p) => a + p, 0);
+  let p = 1, approx = false;
+  if (n) {
+    if (chances.every(c => c === chances[0])) p = binomTail(hits, n, chances[0]);
+    else { const v = chances.reduce((a, c) => a + c*(1-c), 0); p = 0.5*erfc((hits - 0.5 - expect)/Math.sqrt(2*v)); approx = true; }
+  }
+  return { n, hits, expect, chance: n ? expect/n : 0, p, approx };
+}
+const groupStats = list => stats(list.filter(t => t.hit).length, list.map(t => 1/t.k));
+// Partial score on one dimension (e.g. only the color) for combination levels
+function dimStats(list, L, dim) {
+  const by = Object.fromEntries(L.items.map(it => [it.id, it]));
+  const values = new Set(L.items.map(it => it.dims[dim]));
+  const hits = list.filter(t => by[t.target] && by[t.answer] && by[t.target].dims[dim] === by[t.answer].dims[dim]).length;
+  return stats(hits, list.map(() => 1/values.size));
+}
+const pct = x => (100*x).toFixed(0) + ' %';
+const fmtP = p => p < 0.001 ? '< 0,001' : p.toFixed(3).replace('.', ',');
+function verdict(st, isControl, L) {
+  if (st.n < 10) return 'Muy pocos ensayos para sacar conclusiones.';
+  if (L && L.id === 'bn' && !isControl && st.p < 0.05) return 'Por encima del azar, como es de esperar en este nivel: la luz atraviesa los párpados y el antifaz. Pasa a los niveles de colores con el mismo brillo para una prueba de verdad.';
+  if (st.p < 0.001) return isControl
+    ? 'Muy por encima del azar sin mostrar nada: es casi imposible por suerte. Revisa que nada te diera pistas.'
+    : 'Muy por encima del azar. Antes de creerlo, repite con condiciones más estrictas (pantalla dentro de una caja o bajo una tela). La causa más común es ver algo por el hueco de la nariz.';
+  if (st.p < 0.05) return 'Por encima del azar, pero un resultado así sale por pura suerte aproximadamente 1 de cada 20 veces. Repite y mira si se mantiene en el total acumulado.';
+  return 'Compatible con adivinar al azar.';
+}
+
+// ───────── Views ─────────
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const nameOf = (lvl, id) => (LEVEL[lvl]?.items.find(i => i.id === id) || {}).name || id;
+const fmtDate = iso => { try { return new Date(iso).toLocaleString('es-ES', { dateStyle:'short', timeStyle:'short' }); } catch { return iso; } };
+
+function swatches(L) {
+  const cols = [...new Set(L.items.map(it => it.bgHex || (it.bg && COLOR_DEF[it.bg].vivid) || (it.fill && COLOR_DEF[it.fill].vivid)).filter(Boolean))];
+  return cols.length ? `<span class="swatches">${cols.map(c => `<i style="background:${c}"></i>`).join('')}</span>` : '';
+}
+function renderLevels() {
+  let html = '', group = '';
+  for (const L of LEVELS) {
+    if (L.group !== group) { if (group) html += '</div>'; group = L.group; html += `<h3>${esc(group)}</h3><div class="levels">`; }
+    const mine = trials.filter(t => t.level === L.id && t.mode === 'show');
+    const st = mine.length ? groupStats(mine) : null;
+    const sub = st ? `${st.n} ensayos · ${pct(st.hits/st.n)} (azar ${pct(1/L.k)})` : `Azar ${pct(1/L.k)}`;
+    html += `<button class="lvl${L.id === levelId ? ' on' : ''}" data-level="${L.id}"><span class="n">${L.num}</span>
+      <span><span class="t">${esc(L.name)}</span><br><span class="s">${sub}</span>${swatches(L)}</span></button>`;
+  }
+  $('levels').innerHTML = html + '</div>';
+  const L = LEVEL[levelId];
+  $('lvlinfo').innerHTML = `<b>Nivel ${L.num}: ${esc(L.name)}</b><br>Opciones: ${L.items.map(it => esc(it.name)).join(', ')}.` +
+    (L.note ? `<br><span class="hint">${esc(L.note)}</span>` : '');
+}
+$('levels').addEventListener('click', e => { const b = e.target.closest('[data-level]'); if (b) setLevel(b.dataset.level); });
+
+function showResult(sess, list, early) {
+  const L = LEVEL[sess.level], st = groupStats(list);
+  $('r-sub').textContent = `Nivel ${L.num}: ${L.name} · ${sess.mode === 'control' ? 'control (sin objetivo)' : 'objetivo visible'}` +
+    (early ? ` · terminada antes (${list.length} de ${sess.n})` : '');
+  $('r-big').textContent = `${st.hits} de ${st.n}`;
+  const need = hitsNeeded(sess.n, 1/L.k);
+  $('r-detail').innerHTML = st.n ? `Aciertos: <b>${pct(st.hits/st.n)}</b> · Azar: ${pct(1/L.k)} (unos ${st.expect.toFixed(1)} aciertos esperados)<br>
+    Probabilidad de acertar tanto o más por pura suerte: <b>${fmtP(st.p)}</b>` +
+    (need !== null ? `<br><span class="hint">Con ${sess.n} ensayos harían falta ${need} aciertos o más para que sea significativo (p &lt; 0,05).</span>` : '') : 'No hubo ensayos.';
+  $('r-dims').innerHTML = st.n && L.dimNames.length ? '<p style="margin:10px 0 0">Por separado:</p><ul>' + L.dimNames.map(d => {
+    const ds = dimStats(list, L, d);
+    return `<li>${DIM_LABEL[d]}: ${ds.hits} de ${ds.n} (${pct(ds.hits/ds.n)}, azar ${pct(ds.chance)}) · p ${fmtP(ds.p)}</li>`;
+  }).join('') + '</ul>' : '';
+  $('r-verdict').textContent = verdict(st, sess.mode === 'control', L);
+  $('r-trials').innerHTML = '<tr><th>#</th><th>Objetivo</th><th>Respuesta</th><th></th><th class="num">Tiempo</th></tr>' +
+    list.map((t, i) => `<tr><td>${i+1}</td><td>${esc(nameOf(t.level, t.target))}</td><td>${esc(nameOf(t.level, t.answer))}</td>
+      <td>${t.hit ? '✓' : '✗'}</td><td class="num">${(t.rt/1000).toFixed(1)} s</td></tr>`).join('');
+  const nextL = LEVELS[L.num];
+  $('next').hidden = !nextL;
+  if (nextL) $('next').textContent = `Nivel ${nextL.num}: ${nextL.name} →`;
+  $('result').dataset.level = L.id;
+  $('result').hidden = false;
+  window.scrollTo(0, 0);
+  if (st.n) say(`${st.hits} aciertos de ${st.n}. ${verdict(st, sess.mode === 'control', L)}`);
+}
+
+function renderHome() {
+  const rows = [];
+  for (const mode of ['show', 'control']) {
+    const m = trials.filter(t => t.mode === mode);
+    if (!m.length) continue;
+    const all = groupStats(m);
+    rows.push(`<tr><td><b>${mode === 'show' ? 'Objetivo visible' : 'Control'}</b> · total</td><td class="num">${all.n}</td><td class="num">${pct(all.hits/all.n)}</td><td class="num">${pct(all.chance)}</td><td class="num">${fmtP(all.p)}${all.approx ? '*' : ''}</td></tr>`);
+    for (const L of LEVELS) {
+      const g = m.filter(t => t.level === L.id);
+      if (!g.length) continue;
+      const st = groupStats(g);
+      rows.push(`<tr><td>&nbsp;&nbsp;${L.num}. ${esc(L.name)}</td><td class="num">${st.n}</td><td class="num">${pct(st.hits/st.n)}</td><td class="num">${pct(st.chance)}</td><td class="num">${fmtP(st.p)}</td></tr>`);
+    }
+  }
+  // The overall verdict leaves out level 1, where light through the eyelids can explain hits
+  const fair = groupStats(trials.filter(t => t.mode === 'show' && t.level !== 'bn'));
+  $('totals').innerHTML = rows.length
+    ? `<div class="tablewrap"><table><tr><th>Grupo</th><th class="num">Ensayos</th><th class="num">Aciertos</th><th class="num">Azar</th><th class="num">p</th></tr>${rows.join('')}</table></div>
+       <p class="hint"><b>p</b> = probabilidad de acertar tanto o más por pura suerte. Por debajo de 0,05 se considera significativo.${rows.some(r => r.includes('*')) ? ' * aproximado (mezcla niveles con distinto número de opciones).' : ''}</p>
+       ${fair.n ? `<div class="verdict"><b>Todos los niveles menos el 1 (${fair.n} ensayos, ${pct(fair.hits/fair.n)}, azar ${pct(fair.chance)}):</b> ${verdict(fair, false)}</div>` : ''}`
+    : '<p class="empty">Aún no hay ensayos.</p>';
+
+  const recent = sessions.filter(s => s.done > 0).slice(-40).reverse();
+  $('history').innerHTML = recent.length
+    ? `<div class="tablewrap"><table><tr><th>Fecha</th><th>Nivel</th><th class="num">Aciertos</th><th class="num">p</th></tr>` +
+      recent.map(s => {
+        const L = LEVEL[s.level], st = groupStats(trials.filter(t => t.sid === s.id));
+        return `<tr><td>${esc(fmtDate(s.start))}</td><td>${L.num}. ${esc(L.name)}${s.mode === 'control' ? ' <span class="pill">control</span>' : ''}${s.finished ? '' : ' <span class="pill">incompleta</span>'}</td>
+          <td class="num">${st.hits}/${st.n}</td><td class="num">${fmtP(st.p)}</td></tr>`;
+      }).join('') + '</table></div>'
+    : '<p class="empty">Aún no hay sesiones.</p>';
+  renderLevels();
+}
+
+function goHome() { speechSynthesis?.cancel(); $('result').hidden = true; $('home').hidden = false; renderHome(); window.scrollTo(0, 0); }
+$('start').addEventListener('click', startSession);
+$('back').addEventListener('click', goHome);
+$('again').addEventListener('click', () => { speechSynthesis?.cancel(); setLevel($('result').dataset.level); startSession(); });
+$('next').addEventListener('click', () => { const L = LEVELS[LEVEL[$('result').dataset.level].num]; if (L) setLevel(L.id); goHome(); });
+$('export').addEventListener('click', () => {
+  const head = 'sesion,fecha,nivel,opciones,pantalla,objetivo,respuesta,acierto,via,tiempo_ms';
+  const lines = trials.map(t => [t.sid, t.t, LEVEL[t.level].num, t.k, t.mode, t.target, t.answer, t.hit ? 1 : 0, t.via, t.rt].join(','));
+  const blob = new Blob([[head, ...lines].join('\n')], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vision-sin-ojos-ensayos.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('reset').addEventListener('click', () => {
+  if (!confirm('¿Borrar todo el historial? No se puede deshacer.')) return;
+  trials = []; sessions = []; saveAll(); renderHome();
+});
+
+onSettings();
+renderHome();
+</script>
+</body>
+</html>

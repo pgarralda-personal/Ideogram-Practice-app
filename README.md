@@ -10,6 +10,7 @@ Full specification, data formats and how-tos: **[SPEC.md](SPEC.md)**.
 |---|---|
 | `index.html` | GitHub Pages entry point; redirects to the app. |
 | `ideogram-drills.html` | The app (v0.6.1). Self-contained with all audio; double-click to open; works offline; share as one file. |
+| `vision-sin-ojos/index.html` | Separate app (Spanish): blindfolded "eyeless sight" practice in 15 levels (colors, Zener symbols, letters, words) with chance statistics. Online at https://pgarralda-personal.github.io/Ideogram-Practice-app/vision-sin-ojos/ |
 | `voice-sample.mp3` | Short sample of the two English voices. |
 | `wordpress/wordpress-block.html` | Paste into a WordPress **Custom HTML** block. |
 | `wordpress/ideogram-audio.zip` | MP3s for WordPress: unzip and upload the voice folders to `/wp-content/uploads/ideogram-audio/` (file manager / FTP). |
