@@ -1,6 +1,6 @@
 # Ideogram Drills: Specification
 
-Version described: **v0.6.1** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
+Version described: **v0.7** (October 2026). This file is the reference for evolving the app. Update it whenever behaviour, formats or the build process change.
 
 ---
 
@@ -24,7 +24,7 @@ Origin: a Python/Tkinter drill (`Ideogram drills v0.1`) that read 194 words with
 
 ---
 
-## 2. Features (v0.6)
+## 2. Features (v0.7)
 
 | Area | Behaviour |
 |---|---|
@@ -35,7 +35,7 @@ Origin: a Python/Tkinter drill (`Ideogram drills v0.1`) that read 194 words with
 | Controls | Start / Pause / Resume, Next, Stop. Keyboard: Space (start/pause), → (next), Esc (stop). |
 | Voice | Recorded voices of the current language: all at random (default), or one voice; or the browser voice. Volume. Optional 880 Hz beep 0.38 s before each word. Test voice button. |
 | Browser voice (backup) | Ranked voice list (natural / neural / premium / enhanced first; novelty voices hidden), speed control. Used automatically if a recording fails. |
-| Language | Picker shown only when the build contains more than one language. Categories, voices and browser voice follow the language. |
+| Language | English, Deutsch, Español, Français, Italiano, Português (Brasil). Picker shown when the build has more than one language; on the first visit the app picks the browser's language if available. Words, categories, voices, browser voice **and all interface text** follow the language. |
 | Categories | Chips per category (from the word list); at least one must be on. |
 | Display | "Show word on screen" option (off by default). Light / dark follows the device. |
 | Review | After a session: numbered word list; tap to mark a word missed; score (% in time) and the time range used. |
@@ -43,7 +43,7 @@ Origin: a Python/Tkinter drill (`Ideogram drills v0.1`) that read 194 words with
 | Device care | Screen Wake Lock during a session; iOS audio unlock on the first tap; `navigator.audioSession.type = "playback"` so iPhones play with the silent switch on. |
 
 ### Not yet (see Roadmap)
-UI text translation, on-screen sketch pad, practice history, reveal-word-after-response mode.
+On-screen sketch pad, practice history, reveal-word-after-response mode.
 
 ---
 
@@ -51,19 +51,23 @@ UI text translation, on-screen sketch pad, practice history, reveal-word-after-r
 
 ```
 tools/wordlists/<lang>.json  ──►  tools/make_audio.py  ──►  audio/<voice>/<slug>.mp3
-            │                                                      │
+            │                     (Kokoro or Piper)                │
             └──────────────►  tools/build.py  ◄────────────────────┘
                                    │   (+ tools/template.html)
                                    ▼
-        ideogram-drills.html   wordpress/wordpress-block.html   wordpress/ideogram-audio.zip
+  index.html (website)   ideogram-drills.html (offline)   wordpress/wordpress-block.html + ideogram-audio.zip
 ```
 
 - **`tools/template.html`**: the whole app (HTML + CSS + JS). **Edit the app here only.** It contains markers the build replaces:
-  - `<!--CONFIG-->` → `<script type="application/json" id="idg-config">` with languages, voices and categories.
+  - `<!--CONFIG-->` → `<script type="application/json" id="idg-config">` with languages, voices, categories and interface translations (`ui`).
   - `<!--AUDIO-->` → `<script type="application/json" id="idg-audio">` with every MP3 base64-encoded (standalone build only; empty in the WordPress block).
-  - `"__AUDIO_BASE__"` → the server folder with the MP3s (WordPress block only).
+  - `"__AUDIO_BASE__"` → the folder the MP3s are fetched from: `audio` for the website (`index.html`), `/wp-content/uploads/ideogram-audio` for the WordPress block; empty in the offline file.
   - `<!-- ═══ Ideogram …` and `<!-- ═══ end #idg-app ═══ -->` delimit the WordPress block.
-- **Generated files are never edited by hand**: `ideogram-drills.html`, `wordpress/*`. Rebuild instead.
+- **Three builds**, all generated (never edited by hand):
+  - `index.html`: the website (GitHub Pages). Small (~70 KB); fetches MP3s from `audio/` when needed.
+  - `ideogram-drills.html`: offline, all audio embedded (~13 MB with 6 languages); share as one file.
+  - `wordpress/wordpress-block.html` (+ `ideogram-audio.zip`): fetches MP3s from the WordPress uploads folder.
+- **Interface text**: English lives in `UI_EN` in the template; other languages in `"ui"` in their word list. `t(key, {vars})` returns the current language's text (English if missing); static elements carry `data-t="key"` (text) / `data-tt="key"` (title) and are filled by `applyUI()`. The build stops on unknown `ui` keys and lists missing ones.
 - The JS is one IIFE in ES5 style (no build step, no modules) so it runs in any browser WordPress users have.
 
 ### Embedding rules (WordPress safety)
@@ -80,7 +84,7 @@ tools/wordlists/<lang>.json  ──►  tools/make_audio.py  ──►  audio/<v
 
 ### Repository and hosting
 - Code: **https://github.com/pgarralda-personal/Ideogram-Practice-app** (public), branch `main`.
-- **GitHub Pages** serves `main` from the repository root. `index.html` is a small redirect to `ideogram-drills.html`, so the site root opens the app. Every push to `main` redeploys in about 1–2 minutes.
+- **GitHub Pages** serves `main` from the repository root. The site root opens `index.html`, the website build (MP3s loaded from `audio/`, which is committed). Every push to `main` redeploys in about 1–2 minutes.
 - `.gitignore` leaves out `_to_delete/`, `tools/models/` (voice model), Python caches and release zips (`Ideogram-Drills-*.zip`, `versions/*.zip`). Generated files (`ideogram-drills.html`, `wordpress/*`) **are** committed, because Pages serves them.
 - Commits use the GitHub private address `8528405+pgarralda-personal@users.noreply.github.com` (set in this repo's git config), never a personal email.
 - Past releases: git history and tags (`v0.6` onwards). `versions/` keeps only the releases from before the repo existed (v0.2–v0.4).
@@ -107,18 +111,22 @@ One file per language. Files whose name starts with `_` are ignored (examples, d
 {
   "code": "es",                     // language code; also used for the browser-voice fallback (es, en, fr…)
   "name": "Español",                // shown in the language picker
-  "kokoro_lang": "es",              // Kokoro phonemizer language: en-us, en-gb, es, fr-fr, it, pt-br, hi, ja, cmn
-  "speed": 0.95,                    // Kokoro speaking speed
+  "engine": "kokoro",               // "kokoro" (default) or "piper"
+  "kokoro_lang": "es",              // Kokoro only: en-us, en-gb, es, fr-fr, it, pt-br, hi, ja, cmn
+  "speed": 0.95,                    // speaking speed
   "voices": [{"id": "ef_dora", "label": "Dora (femenina)"}, {"id": "em_alex", "label": "Alex (masculina)"}],
+                                    // Piper: {"id": "de_thorsten", "label": "…", "model": "de_DE-thorsten-high"}
   "pronounce": {"Butte": "Byoot"},  // optional: text actually spoken when the spelling misleads the voice
   "categories": {
     "Tierra": ["Montaña", "Valle", "Desierto"],
     "Agua": ["Río", "Océano", "Cascada"]
-  }
+  },
+  "ui": {"start": "Empezar", "wordOf": "Palabra {i} de {n}"}   // interface text; keys as in UI_EN (template)
 }
 ```
 Rules (checked by the tools):
-- Each voice id belongs to **one** language only.
+- Each voice id belongs to **one** language only, and uses only `a-z0-9_` (it is a folder name).
+- Current languages: `en` (Kokoro: Heart, Michael), `es` (Kokoro: Dora, Alex), `fr` (Kokoro: Siwis), `it` (Kokoro: Sara, Nicola), `pt` Brazil (Kokoro: Dora, Alex), `de` (Piper: Thorsten). The non-English lists translate the same 194 words in the same 7 categories; where English words share a translation (Mist/Fog, Mushroom/Fungus, Canal/Channel…), distinct words were chosen.
 - No duplicate words within a language (after accent/case folding).
 - Category names are shown to the user as written; category order is the display order.
 
@@ -145,10 +153,14 @@ Allowed values: start time `g0` 0.5–30 s; end time / minimum `g1` 0–30 s (0 
 
 ### Setup (once, on a Mac)
 ```bash
-brew install ffmpeg
-pip3 install kokoro-onnx soundfile
-python3 tools/make_audio.py --list-voices     # first run downloads the voice model (~350 MB) to tools/models/
+brew install ffmpeg python@3.12
+python3.12 -m venv tools/.venv                 # private Python for the tools (ignored by git)
+tools/.venv/bin/pip install -r tools/requirements.txt
+tools/.venv/bin/python tools/make_audio.py --list-voices   # first run downloads the Kokoro model (~350 MB) to tools/models/
 ```
+Run `make_audio.py` with `tools/.venv/bin/python`. `build.py` needs only the standard library (any `python3`).
+**Piper** (open source) is used for languages Kokoro lacks (German). Each Piper voice is named by its model (`de_DE-thorsten-high`), downloaded once to `tools/models/piper/` from https://huggingface.co/rhasspy/piper-voices (pinned to release v1.0.0). Piper voices come in quality levels (`x_low` … `high`); prefer `medium`/`high`, and check new voices with a speech recognizer or a native speaker before shipping (single words are much harder than sentences).
+
 Voices are the open-source **Kokoro** model (Apache 2.0, free for commercial use). Voice id prefix: `a` US English, `b` UK English, `e` Spanish, `f` French, `i` Italian, `p` Brazilian Portuguese, `h` Hindi, `j` Japanese, `z` Mandarin; second letter `f` female / `m` male.
 
 ### Add or change words
@@ -181,7 +193,7 @@ Manual, on real devices:
 - [ ] iPhone (Safari): first word audible after tapping Start; works with the silent switch on; screen stays awake.
 - [ ] Android (Chrome): same.
 - [ ] WordPress staging page: block renders with the theme; MP3s load (open `<AUDIO_BASE>/af_heart/mountain.mp3` directly); dark mode looks right.
-- [ ] Each language: picker, categories, both voices, browser fallback (choose "Browser voice").
+- [ ] Each language: picker, translated interface, categories, each voice, browser fallback (choose "Browser voice"). Listen to a sample of new or changed words.
 - [ ] Word speed-up: listen to a session ending at 0 s; the fastest words sound natural (same pitch, no choppiness) at the chosen maximum.
 - [ ] GitHub Pages: after the push, the site root opens the app and the tab title shows the new version (hard-reload if needed).
 - [ ] Settings survive a reload.
@@ -202,7 +214,7 @@ Manual, on real devices:
 
 ## 8. Roadmap / backlog (proposed, in rough priority order)
 
-1. **Translate the interface text** per language (labels, buttons, messages): move strings to a table keyed by language in the word list or template.
+1. **Native-speaker review** of the word lists and recordings (especially German, see Known limitations).
 2. **Reveal mode**: show the word after its response time, for self-checking.
 3. **Practice history**: store session scores locally; show trend over time.
 4. **On-screen sketch pad** (touch/stylus): capture each ideogram as a thumbnail next to its word in the review.
@@ -213,11 +225,13 @@ Manual, on real devices:
 ## 9. Known limitations
 - Browser speech quality varies by device; it is only a fallback.
 - `localStorage` settings are per browser and device; nothing is synced.
-- The standalone file embeds all audio, so it grows with each language/voice.
+- The offline file embeds all audio (~0.8 MB per voice); with 11 voices it is ~13 MB. The website and WordPress builds load files on demand and stay small.
 - Kokoro pronunciation is occasionally off for rare words (use `pronounce`).
 - Word speed-up is a simple time-stretch: fine up to ~1.5×; towards 2× some words can sound slightly rough.
 - The GitHub Pages site is public: anyone with the link can use the app.
-- `ideogram-drills.html` (~2.3 MB) is committed on every release, so the repository grows by roughly that much per release that changes the app.
+- `ideogram-drills.html` (~13 MB) is committed on every release, so the repository grows by roughly that much per release that changes the app. If that becomes a problem, stop committing it and attach it to GitHub Releases instead.
+- German uses Piper (Kokoro has no German). Only the male voice Thorsten (`high`) is used: the German female Piper voices tested (Kerstin, Ramona, Eva K, MLS) were unintelligible as single words (speech-recognition check: 0–6 of 32 words recognised, vs 24 of 32 for Thorsten). For a female German voice, use the browser voice or a paid service (section 5).
+- Translations were made without a native-speaker review.
 
 ## 10. History
 - **v0.1**: Python/Tkinter + macOS `say`, gaps 5/4/3/2 s per 20 words.
@@ -229,3 +243,4 @@ Manual, on real devices:
 - **v0.5.1**: end time / "Never shorter than" can go down to 0 s (was 0.5 s). Project moved to GitHub; published on GitHub Pages.
 - **v0.6**: words speed up (pitch kept) as the time per word shrinks: "Speed up words as time shortens" and "Fastest word speed" settings.
 - **v0.6.1**: security hardening after a review: escaped JSON embed, keyboard shortcuts scoped to the app, validated saved settings.
+- **v0.7**: German (Piper voice Thorsten), Spanish, French, Italian and Brazilian Portuguese; translated interface; language follows the browser on first visit; website build (`index.html`) loads MP3s on demand.

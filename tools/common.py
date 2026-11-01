@@ -39,7 +39,10 @@ def words_of(lang):
 def validate(langs):
     errors, owner = [], {}
     for L in langs:
-        for k in ("code", "name", "kokoro_lang", "voices", "categories"):
+        engine = L.get("engine", "kokoro")
+        if engine not in ("kokoro", "piper"):
+            errors.append(f"{L['_file']}: unknown engine '{engine}' (kokoro or piper)")
+        for k in ("code", "name", "voices", "categories") + (("kokoro_lang",) if engine == "kokoro" else ()):
             if k not in L:
                 errors.append(f"{L['_file']}: missing '{k}'")
         if errors:
@@ -47,6 +50,8 @@ def validate(langs):
         if not L["voices"]:
             errors.append(f"{L['_file']}: needs at least one voice")
         for v in L["voices"]:
+            if not re.fullmatch(r"[a-z0-9_]+", v["id"]):
+                errors.append(f"{L['_file']}: voice id {v['id']!r} may only use a-z, 0-9 and _ (it is a folder name)")
             if v["id"] in owner:
                 errors.append(f"voice {v['id']} is used by both '{owner[v['id']]}' and '{L['code']}' (each voice belongs to one language)")
             owner[v["id"]] = L["code"]

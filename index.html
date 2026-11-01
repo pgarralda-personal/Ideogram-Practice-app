@@ -3,12 +3,683 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ideogram Drills</title>
-<!-- GitHub Pages entry point: sends visitors to the app -->
-<meta http-equiv="refresh" content="0; url=ideogram-drills.html">
-<link rel="canonical" href="ideogram-drills.html">
+<title>Ideogram Drills v0.7</title>
 </head>
-<body>
-<p><a href="ideogram-drills.html">Open Ideogram Drills</a></p>
+<body style="margin:0">
+<!-- ═══ Ideogram Drills v0.7 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<div id="idg-app">
+<style>
+#idg-app {
+  --bg:#f6f5f2; --card:#fff; --text:#1d1d1f; --muted:#6b6b70; --line:#e2e0db;
+  --accent:#2f5d8a; --accent-text:#fff; --stop:#a33a2e; --ok:#2e7d4f; --soft:#eef2f6;
+  background:var(--bg); color:var(--text); min-height:100vh;
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  #idg-app { --bg:#161618; --card:#222225; --text:#ececee; --muted:#9a9aa0; --line:#36363a;
+    --accent:#6f9fd0; --accent-text:#0d1620; --stop:#e07a6c; --ok:#6cc08f; --soft:#2a2e34; }
+}
+#idg-app *, #idg-app *::before, #idg-app *::after { box-sizing:border-box; }
+#idg-app .idg-main { max-width:560px; margin:0 auto; padding:24px 16px 40px; }
+#idg-app .idg-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
+#idg-app h1 { font-size:22px; margin:0 0 4px; line-height:1.25; color:var(--text); }
+#idg-app .idg-sub { color:var(--muted); margin:0 0 18px; font-size:14px; }
+#idg-app .idg-stage { display:flex; flex-direction:column; align-items:center; gap:6px; margin:6px 0 4px; }
+#idg-app .idg-ring { position:relative; width:150px; height:150px; }
+#idg-app .idg-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+#idg-app .idg-ring circle { fill:none; stroke-width:8; }
+#idg-app .idg-ring .trk { stroke:var(--line); }
+#idg-app .idg-ring .arc { stroke:var(--accent); stroke-linecap:round; }
+#idg-app .idg-ring .arc.speaking { stroke:var(--muted); }
+#idg-app .idg-ringtxt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 14px; }
+#idg-app .idg-now { font-size:22px; font-weight:600; line-height:1.2; word-break:break-word; }
+#idg-app .idg-secs { font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; min-height:20px; }
+#idg-app .idg-meta { text-align:center; color:var(--muted); font-size:14px; min-height:22px; font-variant-numeric:tabular-nums; }
+#idg-app .idg-bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin:14px 0 18px; }
+#idg-app .idg-bar > div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+#idg-app button { font:inherit; border:0; border-radius:10px; cursor:pointer; line-height:1.2; margin:0; text-transform:none; letter-spacing:normal; box-shadow:none; }
+#idg-app .idg-btns { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
+#idg-app .idg-go { padding:14px; font-size:18px; font-weight:600; background:var(--accent); color:var(--accent-text); }
+#idg-app .idg-go.paused { background:var(--ok); color:#fff; }
+#idg-app .idg-sec { padding:14px 16px; font-size:15px; background:var(--soft); color:var(--text); }
+#idg-app .idg-sec[hidden], #idg-app #idg-bvoice[hidden] { display:none; }
+#idg-app .idg-stopbtn { color:var(--stop); }
+#idg-app .idg-keys { text-align:center; font-size:12px; color:var(--muted); margin-top:8px; }
+#idg-app kbd { font:inherit; font-size:11px; border:1px solid var(--line); border-radius:4px; padding:0 5px; }
+#idg-app fieldset { border:1px solid var(--line); border-radius:10px; padding:12px 14px 14px; margin:18px 0 0; }
+#idg-app legend { font-size:12px; font-weight:600; color:var(--muted); padding:0 6px; text-transform:uppercase; letter-spacing:.04em; }
+#idg-app .idg-row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; margin-top:10px; }
+#idg-app .idg-row:first-of-type { margin-top:2px; }
+#idg-app .idg-row > span:first-child { flex:0 0 auto; }
+#idg-app select, #idg-app input[type=number] { font:inherit; font-size:14px; padding:6px 8px; border-radius:8px;
+  border:1px solid var(--line); background:var(--bg); color:var(--text); max-width:62%; margin:0; height:auto; }
+#idg-app input[type=number] { width:72px; }
+#idg-app input[type=range] { width:58%; accent-color:var(--accent); margin:0; }
+#idg-app input[type=checkbox] { accent-color:var(--accent); width:18px; height:18px; margin:0; }
+#idg-app .idg-val { font-variant-numeric:tabular-nums; color:var(--muted); min-width:42px; text-align:right; font-size:13px; }
+#idg-app .idg-inline { display:flex; align-items:center; gap:8px; justify-content:flex-end; flex:1; }
+#idg-app .idg-test { padding:6px 10px; font-size:13px; background:var(--soft); color:var(--text); }
+#idg-app .idg-cats { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+#idg-app .idg-chip { padding:6px 10px; font-size:13px; border-radius:999px; background:var(--soft); color:var(--muted); border:1px solid transparent; }
+#idg-app .idg-chip.on { background:var(--accent); color:var(--accent-text); }
+#idg-app .idg-hint { font-size:12px; color:var(--muted); margin-top:8px; }
+#idg-app .idg-pace { font-size:12px; color:var(--muted); margin-top:8px; padding:8px 10px; background:var(--soft); border-radius:8px; font-variant-numeric:tabular-nums; }
+#idg-app .idg-row[hidden] { display:none; }
+#idg-app .idg-review { margin-top:20px; border-top:1px solid var(--line); padding-top:16px; }
+#idg-app .idg-review[hidden] { display:none; }
+#idg-app .idg-review h2 { font-size:16px; margin:0 0 4px; color:var(--text); }
+#idg-app .idg-score { font-size:14px; color:var(--muted); margin-bottom:10px; }
+#idg-app .idg-list { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
+#idg-app .idg-list button { width:100%; text-align:left; padding:7px 10px; font-size:14px; background:var(--soft); color:var(--text); display:flex; gap:8px; align-items:baseline; }
+#idg-app .idg-list button .n { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:22px; }
+#idg-app .idg-list button.miss { background:transparent; border:1px dashed var(--stop); color:var(--stop); }
+#idg-app .idg-list button.miss .w { text-decoration:line-through; }
+#idg-app .idg-note { color:var(--muted); font-size:13px; margin-top:18px; }
+#idg-app .idg-warn { color:var(--stop); font-size:13px; margin-top:10px; }
+#idg-app .idg-warn:empty { display:none; }
+#idg-app .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+
+<div class="idg-main">
+  <div class="idg-card">
+    <h1 data-t="title">Ideogram Drills</h1>
+    <p class="idg-sub" data-t="sub">You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.</p>
+
+    <div class="idg-stage">
+      <div class="idg-ring" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="arc" id="idg-arc" cx="50" cy="50" r="44"/></svg>
+        <div class="idg-ringtxt"><div class="idg-now" id="idg-now" data-t="ready">Ready</div><div class="idg-secs" id="idg-secs"></div></div>
+      </div>
+    </div>
+    <div class="idg-meta" id="idg-meta" aria-live="polite"></div>
+    <div class="idg-bar"><div id="idg-prog"></div></div>
+
+    <div class="idg-btns">
+      <button class="idg-go" id="idg-go">Start</button>
+      <button class="idg-sec" id="idg-skip" hidden title="Skip to next word" data-t="next" data-tt="nextTitle">Next</button>
+      <button class="idg-sec idg-stopbtn" id="idg-stop" hidden data-t="stop">Stop</button>
+    </div>
+    <div class="idg-keys"><kbd data-t="kSpace">Space</kbd> <span data-t="kStartPause">start / pause</span> · <kbd>→</kbd> <span data-t="kNext">next</span> · <kbd>Esc</kbd> <span data-t="kStop">stop</span></div>
+    <div class="idg-warn" id="idg-warn"></div>
+
+    <section class="idg-review" id="idg-review" hidden>
+      <h2 data-t="review">Session review</h2>
+      <div class="idg-score" id="idg-score"></div>
+      <ul class="idg-list" id="idg-list"></ul>
+      <div class="idg-hint" data-t="reviewHint">Tap a word to mark it missed (no ideogram in time). Tap again to undo.</div>
+    </section>
+
+    <fieldset>
+      <legend data-t="voiceLeg">Voice</legend>
+      <label class="idg-row" id="idg-lang-r" hidden><span data-t="language">Language</span><select id="idg-lang"></select></label>
+      <label class="idg-row"><span data-t="voice">Voice</span><select id="idg-src"></select></label>
+      <div id="idg-bvoice">
+        <label class="idg-row"><span data-t="bvoice">Browser voice</span><select id="idg-voice"></select></label>
+        <label class="idg-row"><span data-t="speed">Speed</span><span class="idg-inline"><input type="range" id="idg-rate" min="0.6" max="1.4" step="0.05"><span class="idg-val" id="idg-rate-v"></span></span></label>
+      </div>
+      <label class="idg-row"><span data-t="volume">Volume</span><span class="idg-inline"><input type="range" id="idg-vol" min="0.2" max="1" step="0.05"><span class="idg-val" id="idg-vol-v"></span></span></label>
+      <label class="idg-row"><span data-t="beep">Beep before each word</span><input type="checkbox" id="idg-beep"></label>
+      <div class="idg-row"><span></span><button class="idg-test" id="idg-testv" data-t="test">Test voice</button></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-t="sessionLeg">Session</legend>
+      <label class="idg-row"><span data-t="len">Words per session</span>
+        <select id="idg-len"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="0" data-t="allPool">All in pool</option></select></label>
+      <label class="idg-row"><span data-t="pace">Pace</span>
+        <select id="idg-mode">
+          <option value="smooth" data-t="mSmooth">Smooth: a little shorter every word</option>
+          <option value="steps" data-t="mSteps">Steps: shorter every few words</option>
+          <option value="fixed" data-t="mFixed">Fixed: same time for every word</option>
+        </select></label>
+      <label class="idg-row"><span id="idg-g0-l">Time per word at start (s)</span><input type="number" id="idg-g0" min="0.5" max="30" step="0.5"></label>
+      <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0" max="30" step="0.5"></label>
+      <label class="idg-row" id="idg-dec-r"><span data-t="dec">Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
+      <label class="idg-row" id="idg-every-r"><span data-t="every">Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
+      <label class="idg-row" id="idg-wfast-r"><span data-t="wfast">Speed up words as time shortens</span><input type="checkbox" id="idg-wfast"></label>
+      <label class="idg-row" id="idg-wmax-r"><span data-t="wmax">Fastest word speed</span><span class="idg-inline"><input type="range" id="idg-wmax" min="1.1" max="2" step="0.05"><span class="idg-val" id="idg-wmax-v"></span></span></label>
+      <div class="idg-pace" id="idg-pace"></div>
+      <label class="idg-row"><span data-t="show">Show word on screen</span><input type="checkbox" id="idg-show"></label>
+      <div class="idg-row" style="display:block"><span data-t="cats">Categories</span>
+        <div class="idg-cats" id="idg-cats"></div></div>
+      <div class="idg-hint" id="idg-pool"></div>
+    </fieldset>
+
+    <p class="idg-note" data-t="note">Words are pre-recorded with open-source voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.</p>
+  </div>
+</div>
+
+<script type="application/json" id="idg-config">{"languages":[{"code":"en","name":"English","voices":[{"id":"af_heart","label":"Heart (female)"},{"id":"am_michael","label":"Michael (male)"}],"categories":{"Land":["Mountain","Hill","Valley","Plain","Desert","Canyon","Rock","Cliff","Cave","Dune","Island","Volcano","Crater","Plateau","Ridge","Peak","Slope","Tundra","Mesa","Butte","Ravine","Gully","Escarpment","Foothills","Outcrop","Field","Meadow","Savanna","Sand","Soil","Boulder","Pebble","Gravel","Clay","Limestone","Quartz","Crystal"],"Water":["River","Lake","Ocean","Stream","Waterfall","Pond","Glacier","Swamp","Bay","Spring","Reef","Creek","Lagoon","Estuary","Delta","Reservoir","Geyser","Tide pool","Rapids","Inlet","Strait","Channel","Floodplain","Marsh","Whirlpool","Wave","Current"],"Structure":["Building","Bridge","Road","Car","House","Tower","Fence","Wall","Statue","Train","Airplane","Ship","Dam","Factory","Lighthouse","City","Village","Path","Harbor","Canal","Fountain","Skyscraper","Stadium","Tunnel","Pipeline","Warehouse","Windmill","Crane","Highway","Billboard","Monument","Pyramid","Temple","Castle","Barn","Silo","Observatory","Radar dish","Satellite dish","Dock","Pier"],"Vegetation":["Tree","Forest","Grass","Flower","Bush","Vine","Leaf","Branch","Moss","Reed","Cactus","Plant","Fruit","Seed","Root","Fungus","Jungle","Pine","Oak","Palm","Fern","Algae","Lichen","Mushroom","Flower petal"],"Sky":["Sky","Cloud","Star","Moon","Sun","Horizon","Mist","Rainbow","Atmosphere","Fog","Aurora","Comet","Planet","Galaxy","Nebula","Vacuum"],"Energy / motion":["Lightning","Wind","Fire","Flame","Spark","Steam","Smoke","Vortex","Explosion","Flow","Breeze","Gust","Tornado","Eruption","Surge","Pulse","Radiation","Beam","Flash","Ripple","Oscillation"],"Life":["Human","Dog","Bird","Fish","Horse","Insect","Cow","Cat","Snake","Deer","Bear","Wolf","Eagle","Whale","Coral","Elephant","Shark","Butterfly","Spider","Jellyfish","Octopus","Penguin","Giraffe","Monkey","Egg","Bone","Feather"]},"ui":{}},{"code":"de","name":"Deutsch","voices":[{"id":"de_thorsten","label":"Thorsten (männlich)"}],"categories":{"Land":["Berg","Hügel","Tal","Ebene","Wüste","Schlucht","Fels","Klippe","Höhle","Düne","Insel","Vulkan","Krater","Hochebene","Grat","Gipfel","Hang","Tundra","Tafelberg","Zeugenberg","Klamm","Rinne","Steilhang","Vorgebirge","Felsvorsprung","Feld","Wiese","Savanne","Sand","Erde","Findling","Kiesel","Schotter","Lehm","Kalkstein","Quarz","Kristall"],"Wasser":["Fluss","See","Ozean","Bach","Wasserfall","Teich","Gletscher","Sumpf","Bucht","Quelle","Riff","Rinnsal","Lagune","Flussmündung","Delta","Stausee","Geysir","Gezeitentümpel","Stromschnellen","Meeresarm","Meerenge","Fahrrinne","Aue","Marsch","Strudel","Welle","Strömung"],"Bauwerk":["Gebäude","Brücke","Straße","Auto","Haus","Turm","Zaun","Mauer","Statue","Zug","Flugzeug","Schiff","Damm","Fabrik","Leuchtturm","Stadt","Dorf","Pfad","Hafen","Kanal","Brunnen","Wolkenkratzer","Stadion","Tunnel","Pipeline","Lagerhalle","Windmühle","Kran","Autobahn","Plakatwand","Denkmal","Pyramide","Tempel","Burg","Scheune","Silo","Sternwarte","Radarschüssel","Satellitenschüssel","Anlegestelle","Seebrücke"],"Pflanzen":["Baum","Wald","Gras","Blume","Busch","Ranke","Blatt","Ast","Moos","Schilf","Kaktus","Pflanze","Frucht","Samen","Wurzel","Baumpilz","Dschungel","Kiefer","Eiche","Palme","Farn","Alge","Flechte","Pilz","Blütenblatt"],"Himmel":["Himmel","Wolke","Stern","Mond","Sonne","Horizont","Dunst","Regenbogen","Atmosphäre","Nebel","Polarlicht","Komet","Planet","Galaxie","Sternnebel","Vakuum"],"Energie / Bewegung":["Blitz","Wind","Feuer","Flamme","Funke","Dampf","Rauch","Wirbel","Explosion","Fließen","Brise","Böe","Tornado","Ausbruch","Woge","Puls","Strahlung","Lichtstrahl","Lichtblitz","Kräuselung","Schwingung"],"Leben":["Mensch","Hund","Vogel","Fisch","Pferd","Insekt","Kuh","Katze","Schlange","Hirsch","Bär","Wolf","Adler","Wal","Koralle","Elefant","Hai","Schmetterling","Spinne","Qualle","Krake","Pinguin","Giraffe","Affe","Ei","Knochen","Feder"]},"ui":{"title":"Ideogramm-Training","sub":"Du hörst Wörter in zufälliger Reihenfolge. Zeichne zu jedem ein Ideogramm, bevor der Ring leer ist; die Zeit pro Wort wird im Lauf der Sitzung kürzer.","ready":"Bereit","start":"Start","pause":"Pause","resume":"Weiter","next":"Nächstes","nextTitle":"Zum nächsten Wort springen","stop":"Stopp","kSpace":"Leertaste","kStartPause":"Start / Pause","kNext":"nächstes","kStop":"Stopp","review":"Auswertung","reviewHint":"Tippe auf ein Wort, um es als verpasst zu markieren (kein Ideogramm rechtzeitig). Erneut tippen macht es rückgängig.","voiceLeg":"Stimme","language":"Sprache","voice":"Stimme","bvoice":"Browser-Stimme","speed":"Sprechtempo","volume":"Lautstärke","beep":"Signalton vor jedem Wort","test":"Stimme testen","sessionLeg":"Sitzung","len":"Wörter pro Sitzung","allPool":"Alle ausgewählten","pace":"Zeitverlauf","mSmooth":"Gleichmäßig: mit jedem Wort etwas kürzer","mSteps":"Stufen: alle paar Wörter kürzer","mFixed":"Fest: gleiche Zeit für jedes Wort","g0Fixed":"Zeit pro Wort (s)","g0":"Zeit pro Wort am Anfang (s)","g1Steps":"Nie kürzer als (s)","g1":"Zeit pro Wort am Ende (s)","dec":"Verkürzen um (s)","every":"Alle … Wörter","wfast":"Wörter schneller sprechen, wenn die Zeit kürzer wird","wmax":"Höchste Sprechgeschwindigkeit","show":"Wort auf dem Bildschirm zeigen","cats":"Kategorien","note":"Die Wörter sind mit Open-Source-Stimmen vorab aufgenommen; die Browser-Stimme dient nur als Ersatz. Lass den Ton an (am iPhone auch den Stummschalter prüfen). Der Bildschirm bleibt während einer Übung an. Deine Einstellungen werden auf diesem Gerät gespeichert.","recommended":"Empfohlen","other":"Weitere","recAll":"Aufnahme: alle Stimmen, zufällig","rec":"Aufnahme: {v}","browser":"Browser-Stimme","backup":" (Ersatz)","listen":"zuhören","getReady":"Achtung","paused":"pausiert","done":"Fertig","stopped":"Gestoppt","noAudio":"Dieser Browser unterstützt keine Audiowiedergabe. Versuche Safari, Chrome oder Edge.","pickCat":"Wähle mindestens eine Kategorie.","wordOf":"Wort {i} von {n}","completed":"{n} Wörter geschafft","score":"{ok} von {n} rechtzeitig ({p} %) · Zeit pro Wort von {a} s bis {b} s","pool":"{n} Wörter in der Auswahl","picked":" · {n} pro Sitzung zufällig gewählt","idle":"{n} Wörter · jedes Mal neu gemischt","every1":"Jedes Wort: {t} · {n} Wörter","over":"{a} → {b} → {c} über {n} Wörter","stepsPart":"{t} (Wörter {r})","speedUp":" · Wörter bis {r} schneller"}},{"code":"es","name":"Español","voices":[{"id":"ef_dora","label":"Dora (femenina)"},{"id":"em_alex","label":"Alex (masculina)"}],"categories":{"Tierra":["Montaña","Colina","Valle","Llanura","Desierto","Cañón","Roca","Acantilado","Cueva","Duna","Isla","Volcán","Cráter","Meseta","Cresta","Cumbre","Ladera","Tundra","Mesa","Cerro testigo","Barranco","Cárcava","Escarpe","Estribaciones","Afloramiento","Campo","Pradera","Sabana","Arena","Suelo","Peñasco","Guijarro","Grava","Arcilla","Caliza","Cuarzo","Cristal"],"Agua":["Río","Lago","Océano","Arroyo","Cascada","Estanque","Glaciar","Pantano","Bahía","Manantial","Arrecife","Riachuelo","Laguna","Estuario","Delta","Embalse","Géiser","Charca de marea","Rápidos","Ensenada","Estrecho","Cauce","Llanura aluvial","Marisma","Remolino","Ola","Corriente"],"Estructura":["Edificio","Puente","Carretera","Coche","Casa","Torre","Valla","Muro","Estatua","Tren","Avión","Barco","Presa","Fábrica","Faro","Ciudad","Aldea","Sendero","Puerto","Canal","Fuente","Rascacielos","Estadio","Túnel","Oleoducto","Almacén","Molino de viento","Grúa","Autopista","Valla publicitaria","Monumento","Pirámide","Templo","Castillo","Granero","Silo","Observatorio","Antena de radar","Antena parabólica","Dársena","Muelle"],"Vegetación":["Árbol","Bosque","Hierba","Flor","Arbusto","Enredadera","Hoja","Rama","Musgo","Junco","Cactus","Planta","Fruta","Semilla","Raíz","Hongo","Selva","Pino","Roble","Palmera","Helecho","Algas","Liquen","Seta","Pétalo"],"Cielo":["Cielo","Nube","Estrella","Luna","Sol","Horizonte","Neblina","Arcoíris","Atmósfera","Niebla","Aurora","Cometa","Planeta","Galaxia","Nebulosa","Vacío"],"Energía / movimiento":["Rayo","Viento","Fuego","Llama","Chispa","Vapor","Humo","Vórtice","Explosión","Flujo","Brisa","Ráfaga","Tornado","Erupción","Oleada","Pulso","Radiación","Haz de luz","Destello","Onda","Oscilación"],"Vida":["Humano","Perro","Pájaro","Pez","Caballo","Insecto","Vaca","Gato","Serpiente","Ciervo","Oso","Lobo","Águila","Ballena","Coral","Elefante","Tiburón","Mariposa","Araña","Medusa","Pulpo","Pingüino","Jirafa","Mono","Huevo","Hueso","Pluma"]},"ui":{"title":"Práctica de ideogramas","sub":"Escucharás palabras en orden aleatorio. Dibuja un ideograma para cada una antes de que se vacíe el anillo; el tiempo por palabra se acorta a medida que avanza la sesión.","ready":"Listo","start":"Empezar","pause":"Pausa","resume":"Continuar","next":"Siguiente","nextTitle":"Pasar a la siguiente palabra","stop":"Detener","kSpace":"Espacio","kStartPause":"empezar / pausa","kNext":"siguiente","kStop":"detener","review":"Resumen de la sesión","reviewHint":"Toca una palabra para marcarla como fallada (sin ideograma a tiempo). Tócala de nuevo para deshacer.","voiceLeg":"Voz","language":"Idioma","voice":"Voz","bvoice":"Voz del navegador","speed":"Velocidad","volume":"Volumen","beep":"Pitido antes de cada palabra","test":"Probar voz","sessionLeg":"Sesión","len":"Palabras por sesión","allPool":"Todas las seleccionadas","pace":"Ritmo","mSmooth":"Suave: un poco más corto en cada palabra","mSteps":"Escalones: más corto cada pocas palabras","mFixed":"Fijo: el mismo tiempo para cada palabra","g0Fixed":"Tiempo por palabra (s)","g0":"Tiempo por palabra al inicio (s)","g1Steps":"Nunca menos de (s)","g1":"Tiempo por palabra al final (s)","dec":"Acortar en (s)","every":"Cada … palabras","wfast":"Acelerar las palabras al acortarse el tiempo","wmax":"Velocidad máxima de las palabras","show":"Mostrar la palabra en pantalla","cats":"Categorías","note":"Las palabras están pregrabadas con voces de código abierto; la voz del navegador solo se usa como respaldo. Mantén el sonido activado (en iPhone, revisa también el interruptor de silencio). La pantalla permanece encendida durante el ejercicio. Tus ajustes se guardan en este dispositivo.","recommended":"Recomendadas","other":"Otras","recAll":"Grabada: todas las voces, al azar","rec":"Grabada: {v}","browser":"Voz del navegador","backup":" (respaldo)","listen":"escucha","getReady":"Prepárate","paused":"en pausa","done":"Hecho","stopped":"Detenido","noAudio":"Este navegador no admite audio. Prueba Safari, Chrome o Edge.","pickCat":"Elige al menos una categoría.","wordOf":"Palabra {i} de {n}","completed":"{n} palabras completadas","score":"{ok} de {n} a tiempo ({p} %) · el tiempo por palabra pasó de {a} s a {b} s","pool":"{n} palabras en total","picked":" · {n} elegidas al azar en cada sesión","idle":"{n} palabras · orden aleatorio en cada sesión","every1":"Cada palabra: {t} · {n} palabras","over":"{a} → {b} → {c} en {n} palabras","stepsPart":"{t} (palabras {r})","speedUp":" · las palabras se aceleran hasta {r}"}},{"code":"fr","name":"Français","voices":[{"id":"ff_siwis","label":"Siwis (féminine)"}],"categories":{"Terre":["Montagne","Colline","Vallée","Plaine","Désert","Canyon","Roche","Falaise","Grotte","Dune","Île","Volcan","Cratère","Plateau","Crête","Pic","Pente","Toundra","Mesa","Butte","Ravin","Ravine","Escarpement","Contreforts","Affleurement","Champ","Prairie","Savane","Sable","Sol","Rocher","Galet","Gravier","Argile","Calcaire","Quartz","Cristal"],"Eau":["Rivière","Lac","Océan","Ruisseau","Cascade","Mare","Glacier","Marécage","Baie","Source","Récif","Ruisselet","Lagune","Estuaire","Delta","Réservoir","Geyser","Cuvette de marée","Rapides","Anse","Détroit","Chenal","Plaine inondable","Marais","Tourbillon","Vague","Courant"],"Structure":["Bâtiment","Pont","Route","Voiture","Maison","Tour","Clôture","Mur","Statue","Train","Avion","Navire","Barrage","Usine","Phare","Ville","Village","Sentier","Port","Canal","Fontaine","Gratte-ciel","Stade","Tunnel","Pipeline","Entrepôt","Moulin à vent","Grue","Autoroute","Panneau publicitaire","Monument","Pyramide","Temple","Château","Grange","Silo","Observatoire","Antenne radar","Antenne parabolique","Quai","Jetée"],"Végétation":["Arbre","Forêt","Herbe","Fleur","Buisson","Liane","Feuille","Branche","Mousse","Roseau","Cactus","Plante","Fruit","Graine","Racine","Mycélium","Jungle","Pin","Chêne","Palmier","Fougère","Algue","Lichen","Champignon","Pétale"],"Ciel":["Ciel","Nuage","Étoile","Lune","Soleil","Horizon","Brume","Arc-en-ciel","Atmosphère","Brouillard","Aurore","Comète","Planète","Galaxie","Nébuleuse","Vide"],"Énergie / mouvement":["Éclair","Vent","Feu","Flamme","Étincelle","Vapeur","Fumée","Vortex","Explosion","Flux","Brise","Rafale","Tornade","Éruption","Déferlante","Pulsation","Rayonnement","Faisceau","Flash","Ondulation","Oscillation"],"Vie":["Humain","Chien","Oiseau","Poisson","Cheval","Insecte","Vache","Chat","Serpent","Cerf","Ours","Loup","Aigle","Baleine","Corail","Éléphant","Requin","Papillon","Araignée","Méduse","Pieuvre","Pingouin","Girafe","Singe","Œuf","Os","Plume"]},"ui":{"title":"Exercices d'idéogrammes","sub":"Vous entendez des mots dans un ordre aléatoire. Dessinez un idéogramme pour chacun avant que l'anneau se vide ; le temps par mot diminue au fil de la séance.","ready":"Prêt","start":"Démarrer","pause":"Pause","resume":"Reprendre","next":"Suivant","nextTitle":"Passer au mot suivant","stop":"Arrêter","kSpace":"Espace","kStartPause":"démarrer / pause","kNext":"suivant","kStop":"arrêter","review":"Bilan de la séance","reviewHint":"Touchez un mot pour le marquer comme manqué (pas d'idéogramme à temps). Touchez-le à nouveau pour annuler.","voiceLeg":"Voix","language":"Langue","voice":"Voix","bvoice":"Voix du navigateur","speed":"Vitesse","volume":"Volume","beep":"Bip avant chaque mot","test":"Tester la voix","sessionLeg":"Séance","len":"Mots par séance","allPool":"Tous les mots choisis","pace":"Rythme","mSmooth":"Progressif : un peu plus court à chaque mot","mSteps":"Paliers : plus court tous les quelques mots","mFixed":"Fixe : même temps pour chaque mot","g0Fixed":"Temps par mot (s)","g0":"Temps par mot au début (s)","g1Steps":"Jamais moins de (s)","g1":"Temps par mot à la fin (s)","dec":"Réduire de (s)","every":"Tous les … mots","wfast":"Accélérer les mots quand le temps raccourcit","wmax":"Vitesse maximale des mots","show":"Afficher le mot à l'écran","cats":"Catégories","note":"Les mots sont préenregistrés avec des voix open source ; la voix du navigateur ne sert que de secours. Gardez le son activé (sur iPhone, vérifiez aussi le bouton silencieux). L'écran reste allumé pendant l'exercice. Vos réglages sont mémorisés sur cet appareil.","recommended":"Recommandées","other":"Autres","recAll":"Enregistrée : toutes les voix, au hasard","rec":"Enregistrée : {v}","browser":"Voix du navigateur","backup":" (secours)","listen":"écoutez","getReady":"Préparez-vous","paused":"en pause","done":"Terminé","stopped":"Arrêté","noAudio":"Ce navigateur ne prend pas en charge l'audio. Essayez Safari, Chrome ou Edge.","pickCat":"Choisissez au moins une catégorie.","wordOf":"Mot {i} sur {n}","completed":"{n} mots terminés","score":"{ok} sur {n} à temps ({p} %) · temps par mot de {a} s à {b} s","pool":"{n} mots sélectionnés","picked":" · {n} tirés au hasard à chaque séance","idle":"{n} mots · mélangés à chaque séance","every1":"Chaque mot : {t} · {n} mots","over":"{a} → {b} → {c} sur {n} mots","stepsPart":"{t} (mots {r})","speedUp":" · mots accélérés jusqu'à {r}"}},{"code":"it","name":"Italiano","voices":[{"id":"if_sara","label":"Sara (femminile)"},{"id":"im_nicola","label":"Nicola (maschile)"}],"categories":{"Terra":["Montagna","Collina","Valle","Pianura","Deserto","Canyon","Roccia","Scogliera","Grotta","Duna","Isola","Vulcano","Cratere","Altopiano","Cresta","Picco","Pendio","Tundra","Mesa","Rilievo isolato","Burrone","Calanco","Scarpata","Pedemontana","Affioramento","Campo","Prato","Savana","Sabbia","Suolo","Masso","Ciottolo","Ghiaia","Argilla","Calcare","Quarzo","Cristallo"],"Acqua":["Fiume","Lago","Oceano","Torrente","Cascata","Stagno","Ghiacciaio","Palude","Baia","Sorgente","Barriera corallina","Ruscello","Laguna","Estuario","Delta","Bacino idrico","Geyser","Pozza di marea","Rapide","Insenatura","Stretto","Braccio di mare","Pianura alluvionale","Acquitrino","Mulinello","Onda","Corrente"],"Struttura":["Edificio","Ponte","Strada","Automobile","Casa","Torre","Recinto","Muro","Statua","Treno","Aereo","Nave","Diga","Fabbrica","Faro","Città","Villaggio","Sentiero","Porto","Canale","Fontana","Grattacielo","Stadio","Galleria","Oleodotto","Magazzino","Mulino a vento","Gru","Autostrada","Cartellone","Monumento","Piramide","Tempio","Castello","Fienile","Silo","Osservatorio","Antenna radar","Antenna parabolica","Banchina","Molo"],"Vegetazione":["Albero","Foresta","Erba","Fiore","Cespuglio","Rampicante","Foglia","Ramo","Muschio","Canna","Cactus","Pianta","Frutto","Seme","Radice","Micelio","Giungla","Pino","Quercia","Palma","Felce","Alga","Lichene","Fungo","Petalo"],"Cielo":["Cielo","Nuvola","Stella","Luna","Sole","Orizzonte","Foschia","Arcobaleno","Atmosfera","Nebbia","Aurora","Cometa","Pianeta","Galassia","Nebulosa","Vuoto"],"Energia / movimento":["Fulmine","Vento","Fuoco","Fiamma","Scintilla","Vapore","Fumo","Vortice","Esplosione","Flusso","Brezza","Raffica","Tornado","Eruzione","Ondata","Impulso","Radiazione","Raggio","Lampo","Increspatura","Oscillazione"],"Vita":["Essere umano","Cane","Uccello","Pesce","Cavallo","Insetto","Mucca","Gatto","Serpente","Cervo","Orso","Lupo","Aquila","Balena","Corallo","Elefante","Squalo","Farfalla","Ragno","Medusa","Polpo","Pinguino","Giraffa","Scimmia","Uovo","Osso","Piuma"]},"ui":{"title":"Esercizi di ideogrammi","sub":"Ascolti parole in ordine casuale. Disegna un ideogramma per ciascuna prima che l'anello si svuoti; il tempo per parola si accorcia man mano che la sessione procede.","ready":"Pronto","start":"Inizia","pause":"Pausa","resume":"Riprendi","next":"Avanti","nextTitle":"Passa alla parola successiva","stop":"Ferma","kSpace":"Spazio","kStartPause":"inizia / pausa","kNext":"avanti","kStop":"ferma","review":"Riepilogo della sessione","reviewHint":"Tocca una parola per segnarla come mancata (nessun ideogramma in tempo). Toccala di nuovo per annullare.","voiceLeg":"Voce","language":"Lingua","voice":"Voce","bvoice":"Voce del browser","speed":"Velocità","volume":"Volume","beep":"Segnale acustico prima di ogni parola","test":"Prova voce","sessionLeg":"Sessione","len":"Parole per sessione","allPool":"Tutte quelle scelte","pace":"Ritmo","mSmooth":"Graduale: un po' più breve a ogni parola","mSteps":"A gradini: più breve ogni poche parole","mFixed":"Fisso: stesso tempo per ogni parola","g0Fixed":"Tempo per parola (s)","g0":"Tempo per parola all'inizio (s)","g1Steps":"Mai meno di (s)","g1":"Tempo per parola alla fine (s)","dec":"Riduci di (s)","every":"Ogni … parole","wfast":"Accelera le parole quando il tempo si accorcia","wmax":"Velocità massima delle parole","show":"Mostra la parola sullo schermo","cats":"Categorie","note":"Le parole sono preregistrate con voci open source; la voce del browser è solo di riserva. Tieni l'audio attivo (su iPhone controlla anche l'interruttore silenzioso). Lo schermo resta acceso durante l'esercizio. Le impostazioni vengono salvate su questo dispositivo.","recommended":"Consigliate","other":"Altre","recAll":"Registrata: tutte le voci, a caso","rec":"Registrata: {v}","browser":"Voce del browser","backup":" (riserva)","listen":"ascolta","getReady":"Preparati","paused":"in pausa","done":"Fatto","stopped":"Fermato","noAudio":"Questo browser non supporta l'audio. Prova Safari, Chrome o Edge.","pickCat":"Scegli almeno una categoria.","wordOf":"Parola {i} di {n}","completed":"{n} parole completate","score":"{ok} su {n} in tempo ({p}%) · tempo per parola da {a} s a {b} s","pool":"{n} parole selezionate","picked":" · {n} scelte a caso in ogni sessione","idle":"{n} parole · mescolate a ogni sessione","every1":"Ogni parola: {t} · {n} parole","over":"{a} → {b} → {c} su {n} parole","stepsPart":"{t} (parole {r})","speedUp":" · parole accelerate fino a {r}"}},{"code":"pt","name":"Português (Brasil)","voices":[{"id":"pf_dora","label":"Dora (feminina)"},{"id":"pm_alex","label":"Alex (masculina)"}],"categories":{"Terra":["Montanha","Colina","Vale","Planície","Deserto","Cânion","Rocha","Penhasco","Caverna","Duna","Ilha","Vulcão","Cratera","Planalto","Serra","Pico","Encosta","Tundra","Chapada","Morro testemunho","Ravina","Voçoroca","Escarpa","Sopé","Afloramento","Campo","Prado","Savana","Areia","Solo","Matacão","Seixo","Cascalho","Argila","Calcário","Quartzo","Cristal"],"Água":["Rio","Lago","Oceano","Córrego","Cachoeira","Lagoa","Geleira","Pântano","Baía","Nascente","Recife","Riacho","Laguna","Estuário","Delta","Represa","Gêiser","Poça de maré","Corredeira","Enseada","Estreito","Braço de mar","Várzea","Brejo","Redemoinho","Onda","Correnteza"],"Estrutura":["Edifício","Ponte","Estrada","Carro","Casa","Torre","Cerca","Muro","Estátua","Trem","Avião","Navio","Barragem","Fábrica","Farol","Cidade","Aldeia","Trilha","Porto","Canal","Chafariz","Arranha-céu","Estádio","Túnel","Oleoduto","Armazém","Moinho de vento","Guindaste","Rodovia","Outdoor","Monumento","Pirâmide","Templo","Castelo","Celeiro","Silo","Observatório","Antena de radar","Antena parabólica","Doca","Píer"],"Vegetação":["Árvore","Floresta","Grama","Flor","Arbusto","Trepadeira","Folha","Galho","Musgo","Junco","Cacto","Planta","Fruta","Semente","Raiz","Fungo","Selva","Pinheiro","Carvalho","Palmeira","Samambaia","Alga","Líquen","Cogumelo","Pétala"],"Céu":["Céu","Nuvem","Estrela","Lua","Sol","Horizonte","Névoa","Arco-íris","Atmosfera","Neblina","Aurora","Cometa","Planeta","Galáxia","Nebulosa","Vácuo"],"Energia / movimento":["Relâmpago","Vento","Fogo","Chama","Faísca","Vapor","Fumaça","Vórtice","Explosão","Fluxo","Brisa","Rajada","Tornado","Erupção","Surto","Pulso","Radiação","Feixe","Clarão","Ondulação","Oscilação"],"Vida":["Humano","Cachorro","Pássaro","Peixe","Cavalo","Inseto","Vaca","Gato","Cobra","Cervo","Urso","Lobo","Águia","Baleia","Coral","Elefante","Tubarão","Borboleta","Aranha","Água-viva","Polvo","Pinguim","Girafa","Macaco","Ovo","Osso","Pena"]},"ui":{"title":"Treino de ideogramas","sub":"Você ouve palavras em ordem aleatória. Desenhe um ideograma para cada uma antes que o anel se esvazie; o tempo por palavra diminui ao longo da sessão.","ready":"Pronto","start":"Iniciar","pause":"Pausar","resume":"Continuar","next":"Próxima","nextTitle":"Pular para a próxima palavra","stop":"Parar","kSpace":"Espaço","kStartPause":"iniciar / pausar","kNext":"próxima","kStop":"parar","review":"Resumo da sessão","reviewHint":"Toque em uma palavra para marcá-la como perdida (sem ideograma a tempo). Toque de novo para desfazer.","voiceLeg":"Voz","language":"Idioma","voice":"Voz","bvoice":"Voz do navegador","speed":"Velocidade","volume":"Volume","beep":"Bipe antes de cada palavra","test":"Testar voz","sessionLeg":"Sessão","len":"Palavras por sessão","allPool":"Todas as selecionadas","pace":"Ritmo","mSmooth":"Gradual: um pouco mais curto a cada palavra","mSteps":"Degraus: mais curto a cada poucas palavras","mFixed":"Fixo: mesmo tempo para cada palavra","g0Fixed":"Tempo por palavra (s)","g0":"Tempo por palavra no início (s)","g1Steps":"Nunca menos que (s)","g1":"Tempo por palavra no fim (s)","dec":"Reduzir em (s)","every":"A cada … palavras","wfast":"Acelerar as palavras quando o tempo encurta","wmax":"Velocidade máxima das palavras","show":"Mostrar a palavra na tela","cats":"Categorias","note":"As palavras são pré-gravadas com vozes de código aberto; a voz do navegador é só uma reserva. Mantenha o som ligado (no iPhone, confira também a chave de silêncio). A tela fica acesa durante o treino. Suas configurações ficam salvas neste dispositivo.","recommended":"Recomendadas","other":"Outras","recAll":"Gravada: todas as vozes, aleatória","rec":"Gravada: {v}","browser":"Voz do navegador","backup":" (reserva)","listen":"ouça","getReady":"Prepare-se","paused":"pausado","done":"Concluído","stopped":"Parado","noAudio":"Este navegador não suporta áudio. Tente Safari, Chrome ou Edge.","pickCat":"Escolha pelo menos uma categoria.","wordOf":"Palavra {i} de {n}","completed":"{n} palavras concluídas","score":"{ok} de {n} a tempo ({p}%) · tempo por palavra de {a} s a {b} s","pool":"{n} palavras selecionadas","picked":" · {n} sorteadas a cada sessão","idle":"{n} palavras · embaralhadas a cada sessão","every1":"Cada palavra: {t} · {n} palavras","over":"{a} → {b} → {c} em {n} palavras","stepsPart":"{t} (palavras {r})","speedUp":" · palavras aceleram até {r}"}}]}</script>
+
+<script>
+(function () {
+  "use strict";
+  // ─── Words and voices come from tools/wordlists/*.json, injected by tools/build.py as #idg-config ───
+  var CFG = null; try { CFG = JSON.parse(document.getElementById("idg-config").textContent); } catch (e) {}
+  if (!CFG || !CFG.languages || !CFG.languages.length) {
+    document.getElementById("idg-app").insertAdjacentHTML("afterbegin", '<p style="color:#a33a2e;padding:16px">Ideogram Drills: word list missing. Rebuild with tools/build.py.</p>');
+    return;
+  }
+  var LANGS = CFG.languages;          // [{code, name, voices:[{id,label}], categories:{name:[words]}}]
+  var L = LANGS[0], CATS = {}, CAT_NAMES = [], RVOICES = [];
+  function setLang(code) {
+    L = LANGS.filter(function (x) { return x.code === code; })[0] || LANGS[0];
+    CATS = L.categories; CAT_NAMES = Object.keys(CATS);
+    RVOICES = L.voices.map(function (v) { return v.id; });
+  }
+
+  // ─── Interface text: English here; other languages come from "ui" in tools/wordlists/<code>.json ───
+  var UI_EN = {
+    title: "Ideogram Drills",
+    sub: "You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.",
+    ready: "Ready", start: "Start", pause: "Pause", resume: "Resume", next: "Next", nextTitle: "Skip to next word", stop: "Stop",
+    kSpace: "Space", kStartPause: "start / pause", kNext: "next", kStop: "stop",
+    review: "Session review", reviewHint: "Tap a word to mark it missed (no ideogram in time). Tap again to undo.",
+    voiceLeg: "Voice", language: "Language", voice: "Voice", bvoice: "Browser voice", speed: "Speed", volume: "Volume",
+    beep: "Beep before each word", test: "Test voice",
+    sessionLeg: "Session", len: "Words per session", allPool: "All in pool", pace: "Pace",
+    mSmooth: "Smooth: a little shorter every word", mSteps: "Steps: shorter every few words", mFixed: "Fixed: same time for every word",
+    g0Fixed: "Time per word (s)", g0: "Time per word at start (s)", g1Steps: "Never shorter than (s)", g1: "Time per word at end (s)",
+    dec: "Shorten by (s)", every: "Every … words", wfast: "Speed up words as time shortens", wmax: "Fastest word speed",
+    show: "Show word on screen", cats: "Categories",
+    note: "Words are pre-recorded with open-source voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.",
+    recommended: "Recommended", other: "Other", recAll: "Recorded: all voices, random", rec: "Recorded: {v}",
+    browser: "Browser voice", backup: " (backup)",
+    listen: "listen", getReady: "Get ready", paused: "paused", done: "Done", stopped: "Stopped",
+    noAudio: "Audio is not supported in this browser. Try Safari, Chrome or Edge.", pickCat: "Pick at least one category.",
+    wordOf: "Word {i} of {n}", completed: "{n} words completed",
+    score: "{ok} of {n} in time ({p}%) · time per word went from {a} s to {b} s",
+    pool: "{n} words in the pool", picked: " · {n} picked at random each session", idle: "{n} words · shuffled each run",
+    every1: "Every word: {t} · {n} words", over: "{a} → {b} → {c} over {n} words", stepsPart: "{t} (words {r})",
+    speedUp: " · words speed up to {r}"
+  };
+  // t("wordOf", {i: 3, n: 20}) → text in the current language (English if missing)
+  function t(k, v) {
+    var s = (L.ui && L.ui[k]) || UI_EN[k] || k;
+    return v ? s.replace(/\{(\w+)\}/g, function (m, x) { return x in v ? v[x] : m; }) : s;
+  }
+  function applyUI() {
+    root.setAttribute("lang", L.code);
+    Array.prototype.forEach.call(root.querySelectorAll("[data-t]"), function (el) { el.textContent = t(el.getAttribute("data-t")); });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-tt]"), function (el) { el.title = t(el.getAttribute("data-tt")); });
+  }
+
+  var root = document.getElementById("idg-app");
+  var $ = function (id) { return document.getElementById("idg-" + id); };
+  var synth = window.speechSynthesis || null;
+  var ARC_LEN = 2 * Math.PI * 44;
+
+  // ─── Settings (remembered in localStorage when available) ───
+  // Where the recorded words come from: embedded in this page (#idg-audio), or MP3 files at AUDIO_BASE/<voice>/<word>.mp3
+  var AUDIO_BASE = "audio";
+  var EMB = null; try { var ae = document.getElementById("idg-audio"); if (ae) EMB = JSON.parse(ae.textContent); } catch (e) {}
+  if (AUDIO_BASE.indexOf("__") === 0) AUDIO_BASE = "";
+  var DEFAULTS = { lang:"", src:"all", voice:"", rate:0.9, vol:1, beep:true, len:"50", mode:"smooth", g0:5, g1:1.5, dec:1, every:20, wfast:true, wmax:1.5, show:false, catsBy:{} };
+  var S = load();
+  function load() {
+    var s = {}; try { s = JSON.parse(localStorage.getItem("idg-settings") || "{}") || {}; } catch (e) {}
+    if (typeof s !== "object") s = {};
+    var o = {}; for (var k in DEFAULTS) o[k] = (k in s) ? s[k] : DEFAULTS[k];
+    // Wrong type (hand-edited or corrupted): use the default
+    for (k in DEFAULTS) if (typeof o[k] !== typeof DEFAULTS[k] || (typeof o[k] === "number" && !isFinite(o[k]))) o[k] = DEFAULTS[k];
+    if (s.cats && !s.catsBy) o.catsBy = { en: s.cats };      // settings saved by v0.2–v0.4
+    if (!o.catsBy || typeof o.catsBy !== "object") o.catsBy = {};
+    if (o.src === "both") o.src = "all";
+    return o;
+  }
+  // Point S.cats at the selected categories of the current language (all of them by default)
+  function fixCats() {
+    var saved = S.catsBy[L.code];
+    var c = (Array.isArray(saved) ? saved : []).filter(function (x) { return Object.prototype.hasOwnProperty.call(CATS, x); });
+    if (!c.length) c = CAT_NAMES.slice();
+    S.catsBy[L.code] = c; S.cats = c;
+  }
+  if (!S.lang) {   // first visit: follow the browser's language when we have it
+    var pref = (navigator.languages || [navigator.language || ""]).map(function (x) { return String(x).slice(0, 2).toLowerCase(); });
+    for (var pi = 0; pi < pref.length && !S.lang; pi++) LANGS.forEach(function (x) { if (!S.lang && x.code === pref[pi]) S.lang = x.code; });
+  }
+  setLang(S.lang); S.lang = L.code; fixCats();
+  function save() { try { var o = {}; for (var k in DEFAULTS) o[k] = S[k]; localStorage.setItem("idg-settings", JSON.stringify(o)); } catch (e) {} }
+
+  // ─── Voices: rank natural / enhanced voices first, hide novelty voices ───
+  var NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Pipe Organ|Fred|Junior|Ralph|Kathy|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
+  function score(v) {
+    var n = v.name, s = 0;
+    if (/natural|neural/i.test(n)) s += 6;
+    if (/online/i.test(n)) s += 2;
+    if (/premium/i.test(n)) s += 5;
+    if (/enhanced/i.test(n)) s += 4;
+    if (/^Google/i.test(n)) s += 3;
+    if (/Samantha|Ava|Allison|Serena|Daniel|Karen|Moira|Tessa|Aria|Jenny|Guy|Libby|Sonia|Ryan/i.test(n)) s += 1;
+    if (/en-(US|GB)/i.test(v.lang)) s += 0.5;
+    return s;
+  }
+  var voices = [];
+  function loadVoices() {
+    if (!synth) return;
+    var re = new RegExp("^" + L.code.split("-")[0], "i");
+    var all = synth.getVoices().filter(function (v) { return re.test(v.lang) && !NOVELTY.test(v.name); });
+    if (!all.length) all = synth.getVoices().filter(function (v) { return re.test(v.lang); });
+    all.sort(function (a, b) { return score(b) - score(a) || a.name.localeCompare(b.name); });
+    voices = all;
+    var sel = $("voice"); sel.innerHTML = "";
+    var best = document.createElement("optgroup"); best.label = t("recommended");
+    var rest = document.createElement("optgroup"); rest.label = t("other");
+    all.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v.name; o.textContent = v.name.replace(/^Microsoft /, "").replace(/ - English.*$/, "") + " (" + v.lang + ")";
+      (score(v) >= 4 ? best : rest).appendChild(o);
+    });
+    if (best.children.length) sel.appendChild(best);
+    if (rest.children.length) sel.appendChild(rest);
+    if (!best.children.length) { while (rest.firstChild) sel.appendChild(rest.firstChild); rest.remove && rest.remove(); }
+    var pick = all.some(function (v) { return v.name === S.voice; }) ? S.voice : (all[0] && all[0].name);
+    if (pick) sel.value = pick;
+  }
+  function currentVoice() { var n = $("voice").value; return voices.filter(function (v) { return v.name === n; })[0] || null; }
+
+  // ─── Audio cue (Web Audio beep) ───
+  var actx = null;
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}  // iOS: play even with the silent switch on
+    try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) { actx = null; }
+  }
+  function beep() {
+    if (!actx) return;
+    try {
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25 * S.vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.16);
+    } catch (e) {}
+  }
+
+  // ─── Speech: say(word) → Promise resolving when finished (with fallbacks) ───
+  var keep = null; // keep a reference: Safari can drop onend otherwise
+  function say(word, k) {
+    k = k || 1;
+    return new Promise(function (resolve) {
+      if (!synth) return resolve();
+      var done = false, fb;
+      var finish = function () { if (done) return; done = true; clearTimeout(fb); resolve(); };
+      var u = new SpeechSynthesisUtterance(word);
+      var v = currentVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = L.code;
+      u.rate = Math.min(2, S.rate * k); u.volume = S.vol;
+      u.onend = finish; u.onerror = finish;
+      keep = u;
+      var go = function () { synth.speak(u); if (synth.paused) synth.resume(); };
+      if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(go, 60); } else go(); // Chrome drops speak() right after cancel()
+      fb = setTimeout(finish, 1200 + word.length * 140 / (S.rate * k) + 1500); // in case onend never fires
+    });
+  }
+  // iOS: speech must start inside a tap; a silent utterance unlocks it
+  var speechUnlocked = false;
+  function unlockSpeech() {
+    if (!synth || speechUnlocked) return;
+    try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); speechUnlocked = true; } catch (e) {}
+  }
+
+  // ─── Recorded audio (Web Audio) ───
+  function hasRecorded() { return !!(EMB || AUDIO_BASE); }
+  // Must match slug() in tools/common.py
+  function slug(w) { return w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""); }
+  var cache = {}, playing = null;
+  function decode(ab) {
+    return new Promise(function (res, rej) {
+      try { var r = actx.decodeAudioData(ab, res, rej); if (r && r.then) r.then(res, rej); } catch (e) { rej(e); }
+    });
+  }
+  function getBuffer(v, w) {
+    var key = v + "/" + w;
+    if (cache[key]) return cache[key];
+    if (!actx) return Promise.reject(new Error("no audio"));
+    var p;
+    if (EMB && EMB[v] && EMB[v][w]) {
+      var bin = atob(EMB[v][w]), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      p = Promise.resolve(u8.buffer);
+    } else if (AUDIO_BASE) {
+      p = fetch(AUDIO_BASE.replace(/\/$/, "") + "/" + v + "/" + slug(w) + ".mp3").then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+    } else p = Promise.reject(new Error("no recording"));
+    p = p.then(decode);
+    p.catch(function () { delete cache[key]; });
+    return (cache[key] = p);
+  }
+  // Pitch-preserving speed-up (WSOLA time-stretch): overlap-add 30 ms windows taken from
+  // the input every hop*rate samples, each nudged (±8 ms) to line up with the previous one.
+  function stretch(buf, rate) {
+    if (!(rate > 1.001)) return buf;
+    var key = rate.toFixed(2);
+    if (buf._st && buf._st[key]) return buf._st[key];
+    var sr = buf.sampleRate, x = buf.getChannelData(0), N = x.length;
+    var W = 2 * Math.round(sr * 0.015), H = W / 2, D = Math.round(sr * 0.008), st = Math.max(1, Math.round(sr / 12000));
+    var outLen = Math.ceil(N / rate), y = new Float32Array(outLen + W), win = new Float32Array(W), i;
+    for (i = 0; i < W; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / W);
+    var prev = 0;
+    for (var k = 0; k * H < outLen; k++) {
+      var o = k * H, nom = Math.min(Math.round(k * H * rate), Math.max(0, N - W)), best = nom;
+      if (k > 0) {
+        var tgt = prev + H, bc = -Infinity;
+        for (var d = -D; d <= D; d++) {
+          var q = nom + d; if (q < 0 || q + W > N) continue;
+          var c = 0, e = 1e-9;
+          for (i = 0; i < W; i += st) { var a = x[q + i]; c += a * (tgt + i < N ? x[tgt + i] : 0); e += a * a; }
+          c /= Math.sqrt(e);
+          if (c > bc) { bc = c; best = q; }
+        }
+      }
+      for (i = 0; i < W; i++) { var s = best + i; if (s < N) y[o + i] += x[s] * (k === 0 && i < H ? 1 : win[i]); }
+      prev = best;
+    }
+    var out = actx.createBuffer(1, outLen, sr);
+    out.getChannelData(0).set(y.subarray(0, outLen));
+    (buf._st = buf._st || {})[key] = out;
+    return out;
+  }
+  function useRecorded() { return S.src !== "browser" && hasRecorded() && !!actx; }
+  function pickVoice() { return S.src === "all" ? RVOICES[Math.floor(Math.random() * RVOICES.length)] : S.src; }
+  function prefetch(w, rate) { if (!useRecorded() || !w) return; (S.src === "all" ? RVOICES : [S.src]).forEach(function (v) { getBuffer(v, w).then(function (b) { stretch(b, rate); }).catch(function () {}); }); }
+  function playBuffer(buf) {
+    return new Promise(function (res) {
+      var src = actx.createBufferSource(), g = actx.createGain(), done = false, fb;
+      var fin = function () { if (done) return; done = true; clearTimeout(fb); if (playing === src) playing = null; res(); };
+      g.gain.value = S.vol; src.buffer = buf; src.connect(g); g.connect(actx.destination);
+      src.onended = fin; fb = setTimeout(fin, buf.duration * 1000 + 800);
+      playing = src; src.start();
+    });
+  }
+  // speak(word): recorded voice when available, browser voice otherwise
+  function speak(word, rate) {
+    rate = rate || 1;
+    if (!useRecorded()) return say(word, rate);
+    return getBuffer(pickVoice(), word).then(function (b) { return playBuffer(stretch(b, rate)); }, function () { return say(word, rate); });
+  }
+  function hush() {
+    try { if (playing) playing.stop(); } catch (e) {} playing = null;
+    if (synth) synth.cancel();
+  }
+
+  // ─── Wake lock ───
+  var wake = null;
+  function lockScreen() { try { if (navigator.wakeLock && !wake) navigator.wakeLock.request("screen").then(function (w) { wake = w; w.addEventListener("release", function () { wake = null; }); }).catch(function () {}); } catch (e) {} }
+  function unlockScreen() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && state === "running") lockScreen(); });
+
+  // ─── Session state ───
+  var state = "idle";            // idle | running | paused
+  var order = [], idx = 0, runId = 0, missed = {}, reached = 0;
+  var gapTimer = null, raf = null, gapEnd = 0, gapLen = 0, gapLeft = 0;
+
+  function pool() {
+    var w = []; S.cats.forEach(function (c) { w = w.concat(CATS[c]); }); return w;
+  }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // Time for word i (0-based) in a session of n words
+  function gapAt(i, n) {
+    var g0 = +S.g0, g1 = +S.g1, g;
+    if (S.mode === "fixed" || n <= 1) g = g0;
+    else if (S.mode === "steps") g = Math.max(Math.min(g0, g1), g0 - Math.floor(i / Math.max(1, +S.every)) * (+S.dec));
+    else g = g0 + (g1 - g0) * (i / (n - 1));
+    return Math.max(0, Math.round(g * 10) / 10);
+  }
+  function gapFor(i) { return gapAt(i, order.length); }
+  // Word speed for word i: 1× at the longest time, rising to wmax at the shortest time of the session
+  function rateAt(i, n) {
+    if (!S.wfast || S.mode === "fixed" || n <= 1) return 1;
+    var hi = gapAt(0, n), lo = gapAt(n - 1, n);
+    if (hi <= lo) return 1;
+    var f = Math.max(0, Math.min(1, (hi - gapAt(i, n)) / (hi - lo)));
+    return Math.round((1 + (+S.wmax - 1) * f) * 20) / 20;
+  }
+  function rateFor(i) { return rateAt(i, order.length); }
+  function fmtRate(r) { return (+r).toFixed(2).replace(/0$/, "").replace(/\.0$/, "") + "×"; }
+  function sessionLen() { var n = pool().length; return Math.min(+S.len || n, n); }
+  function paceText() {
+    var txt = paceSteps(), n = sessionLen(), r = n ? rateAt(n - 1, n) : 1;
+    return txt && r > 1 ? txt + t("speedUp", { r: fmtRate(r) }) : txt;
+  }
+  function paceSteps() {
+    var n = sessionLen(), f = function (x) { return (x % 1 ? x.toFixed(1) : String(x)) + " s"; };
+    if (!n) return "";
+    if (S.mode === "fixed" || n === 1) return t("every1", { t: f(gapAt(0, n)), n: n });
+    if (S.mode === "steps") {
+      var parts = [], k = Math.max(1, +S.every), i = 0;
+      while (i < n && parts.length < 12) { var g = gapAt(i, n), j = i; while (j < n && gapAt(j, n) === g) j++; parts.push(t("stepsPart", { t: f(g), r: (i + 1) + (j - 1 > i ? "–" + j : "") })); i = j; }
+      return parts.join(" → ") + (i < n ? " → …" : "");
+    }
+    return t("over", { a: f(gapAt(0, n)), b: f(gapAt(Math.floor((n - 1) / 2), n)), c: f(gapAt(n - 1, n)), n: n });
+  }
+
+  function setRing(frac, speaking) {
+    var a = $("arc");
+    a.style.strokeDasharray = ARC_LEN;
+    a.style.strokeDashoffset = ARC_LEN * (1 - Math.max(0, Math.min(1, frac)));
+    a.classList.toggle("speaking", !!speaking);
+  }
+  function setNow(t) { $("now").textContent = t; }
+  function setSecs(t) { $("secs").textContent = t; }
+
+  function tick() {
+    var left = Math.max(0, gapEnd - performance.now());
+    setRing(gapLen ? left / gapLen : 0);
+    setSecs((left / 1000).toFixed(1) + " s");
+    if (left > 0 && state === "running") raf = requestAnimationFrame(tick);
+  }
+  function runGap(ms, id) {
+    gapLen = gapLen || ms; gapEnd = performance.now() + ms;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    clearTimeout(gapTimer);
+    gapTimer = setTimeout(function () { if (id === runId && state === "running") { idx++; step(); } }, ms);
+  }
+
+  function step() {
+    var id = runId;
+    if (idx >= order.length) return finish();
+    var word = order[idx], gap = gapFor(idx), rate = rateFor(idx);
+    reached = Math.max(reached, idx + 1);
+    gapLen = 0; gapLeft = 0;
+    setNow(S.show ? word : "•"); setSecs(t("listen"));
+    setRing(1, true);
+    $("meta").textContent = t("wordOf", { i: idx + 1, n: order.length }) + " · " + gap.toFixed(1) + " s" + (rate > 1 ? " · " + fmtRate(rate) : "");
+    $("prog").style.width = ((idx + 1) / order.length * 100) + "%";
+    prefetch(order[idx + 1], rateFor(idx + 1));
+    if (S.beep) beep();
+    setTimeout(function () {
+      if (id !== runId || state !== "running") return;
+      speak(word, rate).then(function () {
+        if (id !== runId || state !== "running") return;
+        gapLen = gap * 1000; runGap(gapLen, id);
+      });
+    }, S.beep ? 380 : 0);
+  }
+
+  function start() {
+    unlockAudio(); unlockSpeech();          // must happen inside the tap
+    if (!synth && !useRecorded()) { $("warn").textContent = t("noAudio"); return; }
+    var p = pool();
+    if (!p.length) { $("warn").textContent = t("pickCat"); return; }
+    $("warn").textContent = "";
+    unlockAudio(); unlockSpeech();          // must happen inside the tap
+    var n = +S.len || p.length;
+    order = shuffle(p).slice(0, Math.min(n, p.length));
+    prefetch(order[0], rateFor(0));
+    idx = 0; missed = {}; reached = 0; runId++;
+    state = "running"; lockScreen(); ui();
+    $("review").hidden = true;
+    setNow(t("getReady")); setSecs(""); setRing(1, true);
+    var id = runId;
+    setTimeout(function () { if (id === runId && state === "running") step(); }, 700);
+  }
+  function pause() {
+    if (state !== "running") return;
+    state = "paused"; runId++;
+    clearTimeout(gapTimer); cancelAnimationFrame(raf);
+    gapLeft = gapLen ? Math.max(0, gapEnd - performance.now()) : 0;
+    hush();
+    setSecs(t("paused")); ui();
+  }
+  function resume() {
+    if (state !== "paused") return;
+    unlockAudio(); unlockSpeech();
+    state = "running"; runId++; lockScreen(); ui();
+    if (gapLeft > 200) { setNow(S.show ? order[idx] : "•"); runGap(gapLeft, runId); }
+    else if (gapLen) { idx++; step(); }  // pause hit at the very end of a gap
+    else step();                         // paused while speaking: repeat the word
+  }
+  function next() {
+    if (state === "idle") return;
+    runId++; clearTimeout(gapTimer); cancelAnimationFrame(raf); hush();
+    idx++;
+    if (state === "paused") { state = "running"; ui(); }
+    step();
+  }
+  function stop(done) {
+    var was = state;
+    runId++; state = "idle";
+    clearTimeout(gapTimer); cancelAnimationFrame(raf);
+    hush();
+    unlockScreen(); ui();
+    setNow(t(done ? "done" : "stopped")); setSecs(""); setRing(done ? 1 : 0);
+    if (was !== "idle") review(done ? order.length : reached);
+  }
+  function finish() { $("meta").textContent = t("completed", { n: order.length }); stop(true); }
+
+  function review(count) {
+    var words = order.slice(0, count);
+    var ul = $("list"); ul.innerHTML = "";
+    if (!words.length) { $("review").hidden = true; return; }
+    words.forEach(function (w, i) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.innerHTML = '<span class="n"></span><span class="w"></span>';
+      b.querySelector(".n").textContent = i + 1; b.querySelector(".w").textContent = w;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () {
+        missed[i] = !missed[i]; b.classList.toggle("miss", missed[i]); b.setAttribute("aria-pressed", String(!!missed[i])); scoreLine(words.length);
+      });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    scoreLine(words.length);
+    $("review").hidden = false;
+  }
+  function scoreLine(n) {
+    var m = 0; for (var k in missed) if (missed[k]) m++;
+    var g0 = gapFor(0).toFixed(1), g1 = gapFor(Math.max(0, n - 1)).toFixed(1);
+    $("score").textContent = t("score", { ok: n - m, n: n, p: Math.round((n - m) / n * 100), a: g0, b: g1 });
+  }
+
+  function ui() {
+    var go = $("go");
+    go.textContent = t(state === "running" ? "pause" : state === "paused" ? "resume" : "start");
+    go.classList.toggle("paused", state === "paused");
+    $("skip").hidden = state === "idle";
+    $("stop").hidden = state === "idle";
+    $("cats").querySelectorAll("button").forEach(function (b) { b.disabled = state !== "idle"; });
+    ["lang", "len", "mode", "g0", "g1", "dec", "every", "wfast", "wmax"].forEach(function (k) { $(k).disabled = state !== "idle"; });
+  }
+
+  // ─── Controls ───
+  function renderCats() {
+    var box = $("cats"); box.innerHTML = "";
+    CAT_NAMES.forEach(function (c) {
+      var b = document.createElement("button");
+      b.className = "idg-chip" + (S.cats.indexOf(c) >= 0 ? " on" : "");
+      b.textContent = c + " " + CATS[c].length;
+      b.setAttribute("aria-pressed", String(S.cats.indexOf(c) >= 0));
+      b.addEventListener("click", function () {
+        var i = S.cats.indexOf(c); if (i >= 0) S.cats.splice(i, 1); else S.cats.push(c);
+        save(); renderCats();
+      });
+      box.appendChild(b);
+    });
+    var n = pool().length, len = +S.len || n;
+    $("pool").textContent = t("pool", { n: n }) + (n && len < n ? t("picked", { n: len }) : "");
+    if (state === "idle") $("meta").textContent = t("idle", { n: n });
+    showPace();
+  }
+  function showPace() {
+    var m = S.mode;
+    $("g0-l").textContent = t(m === "fixed" ? "g0Fixed" : "g0");
+    $("g1-l").textContent = t(m === "steps" ? "g1Steps" : "g1");
+    $("g1-r").hidden = m === "fixed";
+    $("dec-r").hidden = m !== "steps";
+    $("every-r").hidden = m !== "steps";
+    $("wfast-r").hidden = m === "fixed";
+    $("wmax-r").hidden = m === "fixed" || !S.wfast;
+    $("wmax-v").textContent = fmtRate(S.wmax);
+    $("pace").textContent = paceText();
+  }
+  function bind() {
+    $("rate").value = S.rate; $("vol").value = S.vol; $("beep").checked = S.beep;
+    $("len").value = String(S.len); $("g0").value = S.g0; $("g1").value = S.g1; $("show").checked = S.show;
+    var showVals = function () { $("rate-v").textContent = (+S.rate).toFixed(2) + "×"; $("vol-v").textContent = Math.round(S.vol * 100) + "%"; };
+    showVals();
+    $("rate").addEventListener("input", function () { S.rate = +this.value; showVals(); save(); });
+    $("vol").addEventListener("input", function () { S.vol = +this.value; showVals(); save(); });
+    $("beep").addEventListener("change", function () { S.beep = this.checked; save(); });
+    $("show").addEventListener("change", function () { S.show = this.checked; save(); if (state !== "idle" && order[idx]) setNow(S.show ? order[idx] : "•"); });
+    $("len").addEventListener("change", function () { S.len = this.value; save(); renderCats(); });
+    $("mode").value = S.mode; $("dec").value = S.dec; $("every").value = S.every;
+    var num = function (k, lo, hi, int) { return function () { var v = parseFloat(this.value); if (int) v = Math.round(v); if (isFinite(v) && v >= lo && v <= hi) { S[k] = v; save(); } this.value = S[k]; showPace(); }; };
+    $("g0").addEventListener("change", num("g0", 0.5, 30)); $("g1").addEventListener("change", num("g1", 0, 30));
+    $("dec").addEventListener("change", num("dec", 0.1, 10)); $("every").addEventListener("change", num("every", 1, 200, true));
+    ["g0", "g1", "dec", "every"].forEach(function (k) { $(k).addEventListener("input", function () { var v = parseFloat(this.value); if (isFinite(v) && (v > 0 || (k === "g1" && v === 0))) { var old = S[k]; S[k] = k === "every" ? Math.max(1, Math.round(v)) : v; $("pace").textContent = paceText(); S[k] = old; } }); });
+    $("mode").addEventListener("change", function () { S.mode = this.value; save(); showPace(); });
+    $("wfast").checked = S.wfast; $("wmax").value = S.wmax;
+    $("wfast").addEventListener("change", function () { S.wfast = this.checked; save(); showPace(); });
+    $("wmax").addEventListener("input", function () { S.wmax = +this.value; save(); showPace(); });
+    $("voice").addEventListener("change", function () { S.voice = this.value; save(); });
+    // Language picker (only shown when the build has more than one language)
+    var ls = $("lang");
+    LANGS.forEach(function (x) { var o = document.createElement("option"); o.value = x.code; o.textContent = x.name; ls.appendChild(o); });
+    ls.value = L.code; $("lang-r").hidden = LANGS.length < 2;
+    ls.addEventListener("change", function () {
+      S.lang = this.value; setLang(S.lang); fixCats(); save();
+      applyUI(); buildSrc(); showSrc(); loadVoices(); renderCats(); ui();
+    });
+    // Voice choices: all recorded voices of the language at random, each recorded voice, or the browser voice
+    var buildSrc = function () {
+      var sel = $("src"); sel.innerHTML = "";
+      var add = function (v, t) { var o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
+      if (hasRecorded()) {
+        if (L.voices.length > 1) add("all", t("recAll"));
+        L.voices.forEach(function (v) { add(v.id, t("rec", { v: v.label })); });
+      }
+      add("browser", t("browser") + (hasRecorded() ? t("backup") : ""));
+      var ok = Array.prototype.some.call(sel.options, function (o) { return o.value === S.src; });
+      if (!ok) S.src = sel.options[0].value;
+      sel.value = S.src;
+    };
+    buildSrc();
+    function showSrc() { $("bvoice").hidden = S.src !== "browser"; $("rate").closest(".idg-row").hidden = S.src !== "browser"; }
+    showSrc();
+    $("src").addEventListener("change", function () { S.src = this.value; save(); showSrc(); });
+    $("testv").addEventListener("click", function () {
+      unlockAudio(); unlockSpeech(); if (state === "running") return;
+      if (S.beep) beep(); setTimeout(function () { hush(); speak(shuffle(pool().length ? pool() : CATS[CAT_NAMES[0]])[0]); }, S.beep ? 380 : 0);
+    });
+    $("go").addEventListener("click", function () { state === "running" ? pause() : state === "paused" ? resume() : start(); });
+    $("skip").addEventListener("click", next);
+    $("stop").addEventListener("click", function () { stop(false); });
+    document.addEventListener("keydown", function (e) {
+      var t = e.target && e.target.tagName;
+      if (t === "INPUT" || t === "SELECT" || t === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
+      // Embedded in another page (WordPress): only react when focus is inside the app
+      var mine = root.contains(e.target) || (root.parentNode === document.body && (e.target === document.body || e.target === document.documentElement));
+      if (!mine) return;
+      if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) $("go").click(); }
+      else if (e.key === "ArrowRight" && state !== "idle") { e.preventDefault(); next(); }
+      else if (e.key === "Escape" && state !== "idle") { e.preventDefault(); stop(false); }
+    });
+  }
+
+  document.addEventListener("keyup", function (e) { if ((e.code === "Space" || e.key === " ") && e.target && e.target.tagName === "BUTTON" && root.contains(e.target)) e.preventDefault(); });
+  applyUI(); bind(); renderCats(); ui(); setRing(0);
+  if (synth) { loadVoices(); synth.addEventListener("voiceschanged", loadVoices); setTimeout(loadVoices, 600); }
+  else if (!hasRecorded()) $("warn").textContent = t("noAudio");
+})();
+</script>
+</div>
+<!-- ═══ end #idg-app ═══ -->
 </body>
 </html>

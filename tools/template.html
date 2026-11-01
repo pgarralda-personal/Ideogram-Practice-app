@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ideogram Drills v0.6.1</title>
+<title>Ideogram Drills v0.7</title>
 </head>
 <body style="margin:0">
-<!-- ═══ Ideogram Drills v0.6.1 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
+<!-- ═══ Ideogram Drills v0.7 — everything below lives inside #idg-app so it can be pasted into a WordPress Custom HTML block ═══ -->
 <div id="idg-app">
 <style>
 #idg-app {
@@ -82,13 +82,13 @@
 
 <div class="idg-main">
   <div class="idg-card">
-    <h1>Ideogram Drills</h1>
-    <p class="idg-sub">You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.</p>
+    <h1 data-t="title">Ideogram Drills</h1>
+    <p class="idg-sub" data-t="sub">You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.</p>
 
     <div class="idg-stage">
       <div class="idg-ring" aria-hidden="true">
         <svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="arc" id="idg-arc" cx="50" cy="50" r="44"/></svg>
-        <div class="idg-ringtxt"><div class="idg-now" id="idg-now">Ready</div><div class="idg-secs" id="idg-secs"></div></div>
+        <div class="idg-ringtxt"><div class="idg-now" id="idg-now" data-t="ready">Ready</div><div class="idg-secs" id="idg-secs"></div></div>
       </div>
     </div>
     <div class="idg-meta" id="idg-meta" aria-live="polite"></div>
@@ -96,56 +96,56 @@
 
     <div class="idg-btns">
       <button class="idg-go" id="idg-go">Start</button>
-      <button class="idg-sec" id="idg-skip" hidden title="Skip to next word">Next</button>
-      <button class="idg-sec idg-stopbtn" id="idg-stop" hidden>Stop</button>
+      <button class="idg-sec" id="idg-skip" hidden title="Skip to next word" data-t="next" data-tt="nextTitle">Next</button>
+      <button class="idg-sec idg-stopbtn" id="idg-stop" hidden data-t="stop">Stop</button>
     </div>
-    <div class="idg-keys"><kbd>Space</kbd> start / pause · <kbd>→</kbd> next · <kbd>Esc</kbd> stop</div>
+    <div class="idg-keys"><kbd data-t="kSpace">Space</kbd> <span data-t="kStartPause">start / pause</span> · <kbd>→</kbd> <span data-t="kNext">next</span> · <kbd>Esc</kbd> <span data-t="kStop">stop</span></div>
     <div class="idg-warn" id="idg-warn"></div>
 
     <section class="idg-review" id="idg-review" hidden>
-      <h2>Session review</h2>
+      <h2 data-t="review">Session review</h2>
       <div class="idg-score" id="idg-score"></div>
       <ul class="idg-list" id="idg-list"></ul>
-      <div class="idg-hint">Tap a word to mark it missed (no ideogram in time). Tap again to undo.</div>
+      <div class="idg-hint" data-t="reviewHint">Tap a word to mark it missed (no ideogram in time). Tap again to undo.</div>
     </section>
 
     <fieldset>
-      <legend>Voice</legend>
-      <label class="idg-row" id="idg-lang-r" hidden><span>Language</span><select id="idg-lang"></select></label>
-      <label class="idg-row"><span>Voice</span><select id="idg-src"></select></label>
+      <legend data-t="voiceLeg">Voice</legend>
+      <label class="idg-row" id="idg-lang-r" hidden><span data-t="language">Language</span><select id="idg-lang"></select></label>
+      <label class="idg-row"><span data-t="voice">Voice</span><select id="idg-src"></select></label>
       <div id="idg-bvoice">
-        <label class="idg-row"><span>Browser voice</span><select id="idg-voice"></select></label>
-        <label class="idg-row"><span>Speed</span><span class="idg-inline"><input type="range" id="idg-rate" min="0.6" max="1.4" step="0.05"><span class="idg-val" id="idg-rate-v"></span></span></label>
+        <label class="idg-row"><span data-t="bvoice">Browser voice</span><select id="idg-voice"></select></label>
+        <label class="idg-row"><span data-t="speed">Speed</span><span class="idg-inline"><input type="range" id="idg-rate" min="0.6" max="1.4" step="0.05"><span class="idg-val" id="idg-rate-v"></span></span></label>
       </div>
-      <label class="idg-row"><span>Volume</span><span class="idg-inline"><input type="range" id="idg-vol" min="0.2" max="1" step="0.05"><span class="idg-val" id="idg-vol-v"></span></span></label>
-      <label class="idg-row"><span>Beep before each word</span><input type="checkbox" id="idg-beep"></label>
-      <div class="idg-row"><span></span><button class="idg-test" id="idg-testv">Test voice</button></div>
+      <label class="idg-row"><span data-t="volume">Volume</span><span class="idg-inline"><input type="range" id="idg-vol" min="0.2" max="1" step="0.05"><span class="idg-val" id="idg-vol-v"></span></span></label>
+      <label class="idg-row"><span data-t="beep">Beep before each word</span><input type="checkbox" id="idg-beep"></label>
+      <div class="idg-row"><span></span><button class="idg-test" id="idg-testv" data-t="test">Test voice</button></div>
     </fieldset>
 
     <fieldset>
-      <legend>Session</legend>
-      <label class="idg-row"><span>Words per session</span>
-        <select id="idg-len"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="0">All in pool</option></select></label>
-      <label class="idg-row"><span>Pace</span>
+      <legend data-t="sessionLeg">Session</legend>
+      <label class="idg-row"><span data-t="len">Words per session</span>
+        <select id="idg-len"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="0" data-t="allPool">All in pool</option></select></label>
+      <label class="idg-row"><span data-t="pace">Pace</span>
         <select id="idg-mode">
-          <option value="smooth">Smooth: a little shorter every word</option>
-          <option value="steps">Steps: shorter every few words</option>
-          <option value="fixed">Fixed: same time for every word</option>
+          <option value="smooth" data-t="mSmooth">Smooth: a little shorter every word</option>
+          <option value="steps" data-t="mSteps">Steps: shorter every few words</option>
+          <option value="fixed" data-t="mFixed">Fixed: same time for every word</option>
         </select></label>
       <label class="idg-row"><span id="idg-g0-l">Time per word at start (s)</span><input type="number" id="idg-g0" min="0.5" max="30" step="0.5"></label>
       <label class="idg-row" id="idg-g1-r"><span id="idg-g1-l">Time per word at end (s)</span><input type="number" id="idg-g1" min="0" max="30" step="0.5"></label>
-      <label class="idg-row" id="idg-dec-r"><span>Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
-      <label class="idg-row" id="idg-every-r"><span>Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
-      <label class="idg-row" id="idg-wfast-r"><span>Speed up words as time shortens</span><input type="checkbox" id="idg-wfast"></label>
-      <label class="idg-row" id="idg-wmax-r"><span>Fastest word speed</span><span class="idg-inline"><input type="range" id="idg-wmax" min="1.1" max="2" step="0.05"><span class="idg-val" id="idg-wmax-v"></span></span></label>
+      <label class="idg-row" id="idg-dec-r"><span data-t="dec">Shorten by (s)</span><input type="number" id="idg-dec" min="0.1" max="10" step="0.1"></label>
+      <label class="idg-row" id="idg-every-r"><span data-t="every">Every … words</span><input type="number" id="idg-every" min="1" max="200" step="1"></label>
+      <label class="idg-row" id="idg-wfast-r"><span data-t="wfast">Speed up words as time shortens</span><input type="checkbox" id="idg-wfast"></label>
+      <label class="idg-row" id="idg-wmax-r"><span data-t="wmax">Fastest word speed</span><span class="idg-inline"><input type="range" id="idg-wmax" min="1.1" max="2" step="0.05"><span class="idg-val" id="idg-wmax-v"></span></span></label>
       <div class="idg-pace" id="idg-pace"></div>
-      <label class="idg-row"><span>Show word on screen</span><input type="checkbox" id="idg-show"></label>
-      <div class="idg-row" style="display:block"><span>Categories</span>
+      <label class="idg-row"><span data-t="show">Show word on screen</span><input type="checkbox" id="idg-show"></label>
+      <div class="idg-row" style="display:block"><span data-t="cats">Categories</span>
         <div class="idg-cats" id="idg-cats"></div></div>
       <div class="idg-hint" id="idg-pool"></div>
     </fieldset>
 
-    <p class="idg-note">Words are pre-recorded with the open-source Kokoro voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.</p>
+    <p class="idg-note" data-t="note">Words are pre-recorded with open-source voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.</p>
   </div>
 </div>
 
@@ -166,6 +166,42 @@
     L = LANGS.filter(function (x) { return x.code === code; })[0] || LANGS[0];
     CATS = L.categories; CAT_NAMES = Object.keys(CATS);
     RVOICES = L.voices.map(function (v) { return v.id; });
+  }
+
+  // ─── Interface text: English here; other languages come from "ui" in tools/wordlists/<code>.json ───
+  var UI_EN = {
+    title: "Ideogram Drills",
+    sub: "You hear words in random order. Sketch an ideogram for each one before the ring empties; the time per word shrinks as the session goes on.",
+    ready: "Ready", start: "Start", pause: "Pause", resume: "Resume", next: "Next", nextTitle: "Skip to next word", stop: "Stop",
+    kSpace: "Space", kStartPause: "start / pause", kNext: "next", kStop: "stop",
+    review: "Session review", reviewHint: "Tap a word to mark it missed (no ideogram in time). Tap again to undo.",
+    voiceLeg: "Voice", language: "Language", voice: "Voice", bvoice: "Browser voice", speed: "Speed", volume: "Volume",
+    beep: "Beep before each word", test: "Test voice",
+    sessionLeg: "Session", len: "Words per session", allPool: "All in pool", pace: "Pace",
+    mSmooth: "Smooth: a little shorter every word", mSteps: "Steps: shorter every few words", mFixed: "Fixed: same time for every word",
+    g0Fixed: "Time per word (s)", g0: "Time per word at start (s)", g1Steps: "Never shorter than (s)", g1: "Time per word at end (s)",
+    dec: "Shorten by (s)", every: "Every … words", wfast: "Speed up words as time shortens", wmax: "Fastest word speed",
+    show: "Show word on screen", cats: "Categories",
+    note: "Words are pre-recorded with open-source voices; the browser voice is used only as a backup. Keep the sound on (on iPhone, also check the silent switch). The screen stays awake while a drill runs. Your settings are remembered on this device.",
+    recommended: "Recommended", other: "Other", recAll: "Recorded: all voices, random", rec: "Recorded: {v}",
+    browser: "Browser voice", backup: " (backup)",
+    listen: "listen", getReady: "Get ready", paused: "paused", done: "Done", stopped: "Stopped",
+    noAudio: "Audio is not supported in this browser. Try Safari, Chrome or Edge.", pickCat: "Pick at least one category.",
+    wordOf: "Word {i} of {n}", completed: "{n} words completed",
+    score: "{ok} of {n} in time ({p}%) · time per word went from {a} s to {b} s",
+    pool: "{n} words in the pool", picked: " · {n} picked at random each session", idle: "{n} words · shuffled each run",
+    every1: "Every word: {t} · {n} words", over: "{a} → {b} → {c} over {n} words", stepsPart: "{t} (words {r})",
+    speedUp: " · words speed up to {r}"
+  };
+  // t("wordOf", {i: 3, n: 20}) → text in the current language (English if missing)
+  function t(k, v) {
+    var s = (L.ui && L.ui[k]) || UI_EN[k] || k;
+    return v ? s.replace(/\{(\w+)\}/g, function (m, x) { return x in v ? v[x] : m; }) : s;
+  }
+  function applyUI() {
+    root.setAttribute("lang", L.code);
+    Array.prototype.forEach.call(root.querySelectorAll("[data-t]"), function (el) { el.textContent = t(el.getAttribute("data-t")); });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-tt]"), function (el) { el.title = t(el.getAttribute("data-tt")); });
   }
 
   var root = document.getElementById("idg-app");
@@ -198,6 +234,10 @@
     if (!c.length) c = CAT_NAMES.slice();
     S.catsBy[L.code] = c; S.cats = c;
   }
+  if (!S.lang) {   // first visit: follow the browser's language when we have it
+    var pref = (navigator.languages || [navigator.language || ""]).map(function (x) { return String(x).slice(0, 2).toLowerCase(); });
+    for (var pi = 0; pi < pref.length && !S.lang; pi++) LANGS.forEach(function (x) { if (!S.lang && x.code === pref[pi]) S.lang = x.code; });
+  }
   setLang(S.lang); S.lang = L.code; fixCats();
   function save() { try { var o = {}; for (var k in DEFAULTS) o[k] = S[k]; localStorage.setItem("idg-settings", JSON.stringify(o)); } catch (e) {} }
 
@@ -223,8 +263,8 @@
     all.sort(function (a, b) { return score(b) - score(a) || a.name.localeCompare(b.name); });
     voices = all;
     var sel = $("voice"); sel.innerHTML = "";
-    var best = document.createElement("optgroup"); best.label = "Recommended";
-    var rest = document.createElement("optgroup"); rest.label = "Other";
+    var best = document.createElement("optgroup"); best.label = t("recommended");
+    var rest = document.createElement("optgroup"); rest.label = t("other");
     all.forEach(function (v) {
       var o = document.createElement("option");
       o.value = v.name; o.textContent = v.name.replace(/^Microsoft /, "").replace(/ - English.*$/, "") + " (" + v.lang + ")";
@@ -396,19 +436,19 @@
   function fmtRate(r) { return (+r).toFixed(2).replace(/0$/, "").replace(/\.0$/, "") + "×"; }
   function sessionLen() { var n = pool().length; return Math.min(+S.len || n, n); }
   function paceText() {
-    var t = paceSteps(), n = sessionLen(), r = n ? rateAt(n - 1, n) : 1;
-    return t && r > 1 ? t + " · words speed up to " + fmtRate(r) : t;
+    var txt = paceSteps(), n = sessionLen(), r = n ? rateAt(n - 1, n) : 1;
+    return txt && r > 1 ? txt + t("speedUp", { r: fmtRate(r) }) : txt;
   }
   function paceSteps() {
     var n = sessionLen(), f = function (x) { return (x % 1 ? x.toFixed(1) : String(x)) + " s"; };
     if (!n) return "";
-    if (S.mode === "fixed" || n === 1) return "Every word: " + f(gapAt(0, n)) + " · " + n + " words";
+    if (S.mode === "fixed" || n === 1) return t("every1", { t: f(gapAt(0, n)), n: n });
     if (S.mode === "steps") {
       var parts = [], k = Math.max(1, +S.every), i = 0;
-      while (i < n && parts.length < 12) { var g = gapAt(i, n), j = i; while (j < n && gapAt(j, n) === g) j++; parts.push(f(g) + " (words " + (i + 1) + (j - 1 > i ? "–" + j : "") + ")"); i = j; }
+      while (i < n && parts.length < 12) { var g = gapAt(i, n), j = i; while (j < n && gapAt(j, n) === g) j++; parts.push(t("stepsPart", { t: f(g), r: (i + 1) + (j - 1 > i ? "–" + j : "") })); i = j; }
       return parts.join(" → ") + (i < n ? " → …" : "");
     }
-    return f(gapAt(0, n)) + " → " + f(gapAt(Math.floor((n - 1) / 2), n)) + " → " + f(gapAt(n - 1, n)) + " over " + n + " words";
+    return t("over", { a: f(gapAt(0, n)), b: f(gapAt(Math.floor((n - 1) / 2), n)), c: f(gapAt(n - 1, n)), n: n });
   }
 
   function setRing(frac, speaking) {
@@ -439,9 +479,9 @@
     var word = order[idx], gap = gapFor(idx), rate = rateFor(idx);
     reached = Math.max(reached, idx + 1);
     gapLen = 0; gapLeft = 0;
-    setNow(S.show ? word : "•"); setSecs("listen");
+    setNow(S.show ? word : "•"); setSecs(t("listen"));
     setRing(1, true);
-    $("meta").textContent = "Word " + (idx + 1) + " of " + order.length + " · " + gap.toFixed(1) + " s" + (rate > 1 ? " · " + fmtRate(rate) : "");
+    $("meta").textContent = t("wordOf", { i: idx + 1, n: order.length }) + " · " + gap.toFixed(1) + " s" + (rate > 1 ? " · " + fmtRate(rate) : "");
     $("prog").style.width = ((idx + 1) / order.length * 100) + "%";
     prefetch(order[idx + 1], rateFor(idx + 1));
     if (S.beep) beep();
@@ -456,9 +496,9 @@
 
   function start() {
     unlockAudio(); unlockSpeech();          // must happen inside the tap
-    if (!synth && !useRecorded()) { $("warn").textContent = "Audio is not supported in this browser. Try Safari, Chrome or Edge."; return; }
+    if (!synth && !useRecorded()) { $("warn").textContent = t("noAudio"); return; }
     var p = pool();
-    if (!p.length) { $("warn").textContent = "Pick at least one category."; return; }
+    if (!p.length) { $("warn").textContent = t("pickCat"); return; }
     $("warn").textContent = "";
     unlockAudio(); unlockSpeech();          // must happen inside the tap
     var n = +S.len || p.length;
@@ -467,7 +507,7 @@
     idx = 0; missed = {}; reached = 0; runId++;
     state = "running"; lockScreen(); ui();
     $("review").hidden = true;
-    setNow("Get ready"); setSecs(""); setRing(1, true);
+    setNow(t("getReady")); setSecs(""); setRing(1, true);
     var id = runId;
     setTimeout(function () { if (id === runId && state === "running") step(); }, 700);
   }
@@ -477,7 +517,7 @@
     clearTimeout(gapTimer); cancelAnimationFrame(raf);
     gapLeft = gapLen ? Math.max(0, gapEnd - performance.now()) : 0;
     hush();
-    setSecs("paused"); ui();
+    setSecs(t("paused")); ui();
   }
   function resume() {
     if (state !== "paused") return;
@@ -500,10 +540,10 @@
     clearTimeout(gapTimer); cancelAnimationFrame(raf);
     hush();
     unlockScreen(); ui();
-    setNow(done ? "Done" : "Stopped"); setSecs(""); setRing(done ? 1 : 0);
+    setNow(t(done ? "done" : "stopped")); setSecs(""); setRing(done ? 1 : 0);
     if (was !== "idle") review(done ? order.length : reached);
   }
-  function finish() { $("meta").textContent = order.length + " words completed"; stop(true); }
+  function finish() { $("meta").textContent = t("completed", { n: order.length }); stop(true); }
 
   function review(count) {
     var words = order.slice(0, count);
@@ -525,12 +565,12 @@
   function scoreLine(n) {
     var m = 0; for (var k in missed) if (missed[k]) m++;
     var g0 = gapFor(0).toFixed(1), g1 = gapFor(Math.max(0, n - 1)).toFixed(1);
-    $("score").textContent = (n - m) + " of " + n + " in time (" + Math.round((n - m) / n * 100) + "%) · time per word went from " + g0 + " s to " + g1 + " s";
+    $("score").textContent = t("score", { ok: n - m, n: n, p: Math.round((n - m) / n * 100), a: g0, b: g1 });
   }
 
   function ui() {
     var go = $("go");
-    go.textContent = state === "running" ? "Pause" : state === "paused" ? "Resume" : "Start";
+    go.textContent = t(state === "running" ? "pause" : state === "paused" ? "resume" : "start");
     go.classList.toggle("paused", state === "paused");
     $("skip").hidden = state === "idle";
     $("stop").hidden = state === "idle";
@@ -553,14 +593,14 @@
       box.appendChild(b);
     });
     var n = pool().length, len = +S.len || n;
-    $("pool").textContent = n + " words in the pool" + (n && len < n ? " · " + len + " picked at random each session" : "");
-    if (state === "idle") $("meta").textContent = n + " words · shuffled each run";
+    $("pool").textContent = t("pool", { n: n }) + (n && len < n ? t("picked", { n: len }) : "");
+    if (state === "idle") $("meta").textContent = t("idle", { n: n });
     showPace();
   }
   function showPace() {
     var m = S.mode;
-    $("g0-l").textContent = m === "fixed" ? "Time per word (s)" : "Time per word at start (s)";
-    $("g1-l").textContent = m === "steps" ? "Never shorter than (s)" : "Time per word at end (s)";
+    $("g0-l").textContent = t(m === "fixed" ? "g0Fixed" : "g0");
+    $("g1-l").textContent = t(m === "steps" ? "g1Steps" : "g1");
     $("g1-r").hidden = m === "fixed";
     $("dec-r").hidden = m !== "steps";
     $("every-r").hidden = m !== "steps";
@@ -595,17 +635,17 @@
     ls.value = L.code; $("lang-r").hidden = LANGS.length < 2;
     ls.addEventListener("change", function () {
       S.lang = this.value; setLang(S.lang); fixCats(); save();
-      buildSrc(); showSrc(); loadVoices(); renderCats();
+      applyUI(); buildSrc(); showSrc(); loadVoices(); renderCats(); ui();
     });
     // Voice choices: all recorded voices of the language at random, each recorded voice, or the browser voice
     var buildSrc = function () {
       var sel = $("src"); sel.innerHTML = "";
       var add = function (v, t) { var o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
       if (hasRecorded()) {
-        if (L.voices.length > 1) add("all", "Recorded: all voices, random");
-        L.voices.forEach(function (v) { add(v.id, "Recorded: " + v.label); });
+        if (L.voices.length > 1) add("all", t("recAll"));
+        L.voices.forEach(function (v) { add(v.id, t("rec", { v: v.label })); });
       }
-      add("browser", "Browser voice" + (hasRecorded() ? " (backup)" : ""));
+      add("browser", t("browser") + (hasRecorded() ? t("backup") : ""));
       var ok = Array.prototype.some.call(sel.options, function (o) { return o.value === S.src; });
       if (!ok) S.src = sel.options[0].value;
       sel.value = S.src;
@@ -634,9 +674,9 @@
   }
 
   document.addEventListener("keyup", function (e) { if ((e.code === "Space" || e.key === " ") && e.target && e.target.tagName === "BUTTON" && root.contains(e.target)) e.preventDefault(); });
-  bind(); renderCats(); ui(); setRing(0);
+  applyUI(); bind(); renderCats(); ui(); setRing(0);
   if (synth) { loadVoices(); synth.addEventListener("voiceschanged", loadVoices); setTimeout(loadVoices, 600); }
-  else if (!hasRecorded()) $("warn").textContent = "Audio is not supported in this browser. Try Safari, Chrome or Edge.";
+  else if (!hasRecorded()) $("warn").textContent = t("noAudio");
 })();
 </script>
 </div>
